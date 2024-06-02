@@ -22,10 +22,8 @@ Institution: University of Zurich
 Email: kien.nguyen@geo.uzh.ch
 
 # INTRODUCTION
-The following readme includes information on the data and code files submitted as part of the Hackathon. We also include code outputs for 3 sites in the Amazon as mentioned in the sampling_sites excel. The data we used for this was downloaded from the google drive shared folders:
-	Dataset/Audio/Ingles/Primary1-including ultrasonic
-	Dataset/Audio/Inha-be/ Inha-be Audiomoth 1
-	Dataset/Audio/ParqueDasTribos
+The following readme includes information on the data and code files submitted as part of the Hackathon. We also include code outputs for 3 sites in the Amazon as mentioned in the sampling_sites excel. The data we used for this as an example was downloaded from the google drive shared folders: Dataset/Audio/Ingles/Primary1-including ultrasonic 
+The code can be used for all .wav file inputs retrieved from AudioMoth.
 
 	
 # DATA & FILE OVERVIEW
@@ -39,16 +37,19 @@ The following readme includes information on the data and code files submitted a
 
 ## Data files
 We also provide intermediate output from the 3 sites mentioned above. For each site you can find:
-1.	Output from AST classification in “sitename_results.csv”
-2.	Output for average, max and median PMN values in “sitename_PMN_average.csv”, “sitename_PMN_max.csv”  and “sitename_PMN_median.csv”
-Where “sitename” is “Ingles”, “Inha-be” or “ParqueDasTribos”
+1.	Output from AST classification in “results\Primary1_results.csv”
+2.	Output for average, max and median PMN values in “results\Primary1_PMN_average.csv”, “results\Primary1_PMN_max.csv”  and “results\Primary1_PMN_median.csv”
 
 ### Relationship between files, if important: 
 The output from “Classification.py” can be fed into “graph_classification.py” to get graphs of daily patterns of acoustic activity probabilities as predicted by the AST for crickets, frogs, animal, birds and human sounds.
 The output from “powerminusnoise.R” must be fed into “Post-processing2_line.py” to get Output 2 as mentioned above. This should then be processed with “renametoadjustGMToff.py” and the output from which can be used in “Graph_PMN.ipynb” to create visualisations. Examples of this is included later in this readme file. 
 Additionally, visualization of the output has also been implemented via our Huggingface interface: https://huggingface.co/spaces/trans-farmer/circadian_rhythm_soundscape
 
+# Example visualisation output
 
-## Data-specific information for:
-1.	“sitename_results.csv”: 
-2.	“sitename_PMN_average.csv”, “sitename_PMN_max.csv”  and “sitename_PMN_median.csv”: includes information on frequency bins and corresponding
+1.	Graphs from AST classification:  
+<img loading="lazy" width="200px" src="./ASTclass_out.jpg" alt="ASTclass_out.jpg" />
+
+2.	Graphs from PowerminusNoise estimates:
+<img loading="lazy" width="200px" src="./RGB_cirlce_out.jpg" alt="RGB_cirlce_out.jpg" />
+
