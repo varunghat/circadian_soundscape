@@ -48,6 +48,13 @@ The output from “Classification.py” can be fed into “graph_classification.
 The output from “powerminusnoise.R” must be fed into “Post-processing2_line.py” to get Output 2 as mentioned above. This should then be processed with “renametoadjustGMToff.py” and the output from which can be used in “Graph_PMN.ipynb” to create visualisations. Examples of this is included later in this readme file. 
 Additionally, visualization of the output has also been implemented via our Huggingface interface: https://huggingface.co/spaces/trans-farmer/circadian_rhythm_soundscape
 
+# Example output
+
+1.	Graphs from AST classification:  
+<img loading="lazy" width="30px" src="[./images/RGB_cirlce_out.jpg]" alt="RGB_cirlce_out.jpg" />
+
+2.	Graphs from PowerminusNoise estimates:
+
 
 ## Data-specific information for:
 1.	“sitename_results.csv”: 
