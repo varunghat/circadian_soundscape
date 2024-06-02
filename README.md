@@ -38,7 +38,7 @@ The code can be used for all .wav file inputs retrieved from AudioMoth.
 ## Data files
 We also provide intermediate output from the 3 sites mentioned above. For each site you can find:
 1.	Output from AST classification in “results\ASTresults.zip" and for audioCLIP in "results\results_AudioCLIP.zip" in the form of .csv files.
-2.	Output for average, max and median PMN values in "results\pmn_timeadjusted_sitename.zip"
+2.	Output for average, max and median PMN values in "results\pmn_timeadjusted_sitename.zip". The .csv files in this folder can be uploaded to our hugging face space to generate certain visualisations. 
 
 ### Relationship between files, if important: 
 The output from “AST_run.py” can be fed into “graph_classification.py” to get graphs of daily patterns of acoustic activity probabilities as predicted by the AST for crickets, frogs, animal, birds and human sounds.
