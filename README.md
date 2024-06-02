@@ -52,4 +52,6 @@ Additionally, visualization of the output has also been implemented via our Hugg
 
 2.	Graphs from PowerminusNoise estimates:
 <img loading="lazy" width="200px" src="./RGB_cirlce_out.jpg" alt="RGB_cirlce_out.jpg" />
+Image shows PMN estimates visualised as RGB composites for 3 frequency bins i.e. Red: 0-1500 Hz (denoting acoustic activity in the lower ranges i.e. certain birds, mammals and possible human activity); Green: 1500-5000 Hz (denoting bird activity) and Blue: 5000-10000 Hz (denoting insects).
 
+All graphs generated can be found in 'results' folder.
