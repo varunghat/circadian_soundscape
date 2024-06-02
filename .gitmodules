@@ -1,0 +1,3 @@
+[submodule "AudioCLIP"]
+	path = AudioCLIP
+	url = https://github.com/AndreyGuzhov/AudioCLIP.git

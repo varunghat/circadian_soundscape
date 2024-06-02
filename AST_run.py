@@ -1,10 +1,11 @@
 from transformers import AutoFeatureExtractor, ASTForAudioClassification
-
-# from datasets import load_dataset
 import torch
 import librosa
 
 import glob
+import os
+import pandas as pd
+
 
 from tqdm import tqdm
 import plotly.express as px
@@ -17,9 +18,7 @@ model = ASTForAudioClassification.from_pretrained(
 )
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device
 
-import os
 
 xingu_path = (
     "G:\\.shortcut-targets-by-id\\1Om1xrl8GrY7dADTjuyuKQ6uWkpaLUFCt\\Audio\\Xingu"
@@ -32,8 +31,10 @@ xingu_subpaths = [
 
 xingu_subpaths
 
+# Add or remove audio paths here:
+
 all_audio_paths = [
-    #'D:\\hackathon\\primary1 - including ultrasonic\\',
+    "D:\\hackathon\\primary1 - including ultrasonic\\",
     "D:\\hackathon\\primary2 - including ultrasonic\\",
     "G:\\.shortcut-targets-by-id\\1Om1xrl8GrY7dADTjuyuKQ6uWkpaLUFCt\\Audio\\Ingles\\landing - including ultrasonic\\",
     "G:\\.shortcut-targets-by-id\\1Om1xrl8GrY7dADTjuyuKQ6uWkpaLUFCt\\Audio\\Ingles\inn2\\",
@@ -43,8 +44,6 @@ all_audio_paths = [
     "G:\\.shortcut-targets-by-id\\1Om1xrl8GrY7dADTjuyuKQ6uWkpaLUFCt\\Audio\\\Inhaa-Be\\Inhaa-Be Audiomoth 2\\",
 ] + xingu_subpaths
 
-import os
-import pandas as pd
 
 sampling_rate = 16000
 
@@ -134,18 +133,6 @@ for path in all_audio_paths:
         except Exception as e:
             print(e)
             continue
-
-        # print(res_list)
-        # print(filenames[i],prediction)
-        ##json_data[filename] = res_list
-        # results.append(prediction)
-        # inputs.append(input)
-
-    # inputs = torch.cat(inputs,dim=0)
-
-    # print(len(inputs),inputs[0].shape)
-
-    # json_data
 
     test_df = pd.DataFrame(test_df)
 
