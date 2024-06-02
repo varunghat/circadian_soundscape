@@ -5,20 +5,20 @@ This readme file was created by Confused_scientists for the AI+Environment Hacka
 Title of project: Analysing the Circadian Rhythm of the Amazon soundscape
 Team: Confused_scientists
 
-Name: Nivedita Varma Harisena
-Institution: ETH Zurich
+Name: Nivedita Varma Harisena \
+Institution: ETH Zurich \
 Email: nharisena@ethz.ch
 
-Name: Leon Hauser
-Institution: University of Zurich
+Name: Leon Hauser \
+Institution: University of Zurich \
 Email: leon.hauser@geo.uzh.ch
 
-Name: Varun Ghat Ravikumar
-Institution: University of Zurich
+Name: Varun Ghat Ravikumar \
+Institution: University of Zurich \
 Email: varunghat.ravikumar@uzh.ch
 
-Name: Kien Nguyen
-Institution: University of Zurich
+Name: Kien Nguyen \
+Institution: University of Zurich \
 Email: kien.nguyen@geo.uzh.ch
 
 # INTRODUCTION
