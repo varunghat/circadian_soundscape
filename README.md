@@ -22,28 +22,28 @@ Institution: University of Zurich \
 Email: kien.nguyen@geo.uzh.ch
 
 # INTRODUCTION
-The following readme includes information on the data and code files submitted as part of the Hackathon. We also include code outputs for 3 sites in the Amazon as mentioned in the sampling_sites excel. The data we used for this as an example was downloaded from the google drive shared folders: Dataset/Audio/Ingles/Primary1-including ultrasonic 
+The following readme includes information on the data and code files submitted as part of the Hackathon. We also include code outputs for 3 sites in the Amazon as mentioned in the sampling_sites excel. The data we used for this as an example was downloaded from the google drive shared folders: Dataset/Audio/Ingles/Primary1-including ultrasonic; Dataset/Audio/Inha-be/ Inha-be Audiomoth; Dataset/Audio/ParqueDasTribos
 The code can be used for all .wav file inputs retrieved from AudioMoth.
-
 	
 # DATA & FILE OVERVIEW
 ## Code files
-1.	“Classification.py”- Includes implementation of an AST classification algorithm for audio data recovered from the 3 sites.
-2.	“powerminusnoise.R”- Includes the implementation of “Power minus Noise” (PMN) index estimations that is a proxy for acoustic activity within a frequency range. The code outputs a .csv for each .wav input.
-3.	“renametoadjustGMToff”- If input time steps are in GMT, this changes the file names to offset the output to the correct local time. 
-4.	“Post-processing2_linepy”-Aggregates the outputs from “powerminusnoise.R” to get average, median and max values per time step in 24 hours for multiple days.
-5.	“Graph_classfication.ipynb”- Creates Line plots with time in the x axis and species classification probabilities in the y axis for a given list of species.
-6.	“Graph_PMN.ipynb”- Creates line plots with time in the x axis and PowerminusNoise estimates in the y axis for given frequency bins that can refer to the acoustic niche of different species. Also includes code to visualize the ‘colour’ of PMN over time by converting 3 chosen frequency bins to an RGB equivalent, allowing us to identify via colour which species group is most active in which time of the day based on the colour profiles.
+1.	“AST_demo.ipynb” and "AST_run.py"- Includes implementation of an AST classification algorithm for classification of .wav files into 'speech','bird','frog','cricket' and 'animal' species. Please use the 'AST_run.py' to implement the alogrithm for batch implementation across multiple audio files denoting a soundscape. 
+2.	"AudioCLIP" folder includes implementation of AudioCLIP classification of species acoustic signals
+3.	“powerminusnoise.R”- Includes the implementation of “Power minus Noise” (PMN) index estimations that is a proxy for acoustic activity within a frequency range. The code outputs a .csv for each .wav input.
+4.	“renametoadjustGMToff”- If input time steps are in GMT, this changes the file names to offset the output to the correct local time. 
+5.	“Post-processing2_linepy”-Aggregates the outputs from “powerminusnoise.R” to get average, median and max values per time step in 24 hours for multiple days.
+6.	“Graph_classfication.ipynb”- Creates Line plots with time in the x axis and species classification probabilities in the y axis for a given list of species.
+7.	“Graph_PMN.ipynb”- Creates line plots with time in the x axis and PowerminusNoise estimates in the y axis for given frequency bins that can refer to the acoustic niche of different species. Also includes code to visualize the ‘colour’ of PMN over time by converting 3 chosen frequency bins to an RGB equivalent, allowing us to identify via colour which species group is most active in which time of the day based on the colour profiles.
 
 ## Data files
 We also provide intermediate output from the 3 sites mentioned above. For each site you can find:
-1.	Output from AST classification in “results\Primary1_results.csv”
-2.	Output for average, max and median PMN values in “results\Primary1_PMN_average.csv”, “results\Primary1_PMN_max.csv”  and “results\Primary1_PMN_median.csv”
+1.	Output from AST classification in “results\ASTresults.zip" and for audioCLIP in "results\results_AudioCLIP.zip"
+2.	Output for average, max and median PMN values in "results\pmn_timeadjusted_sitename.zip"
 
 ### Relationship between files, if important: 
-The output from “Classification.py” can be fed into “graph_classification.py” to get graphs of daily patterns of acoustic activity probabilities as predicted by the AST for crickets, frogs, animal, birds and human sounds.
+The output from “AST_run.py” can be fed into “graph_classification.py” to get graphs of daily patterns of acoustic activity probabilities as predicted by the AST for crickets, frogs, animal, birds and human sounds.
 The output from “powerminusnoise.R” must be fed into “Post-processing2_line.py” to get Output 2 as mentioned above. This should then be processed with “renametoadjustGMToff.py” and the output from which can be used in “Graph_PMN.ipynb” to create visualisations. Examples of this is included later in this readme file. 
-Additionally, visualization of the output has also been implemented via our Huggingface interface: https://huggingface.co/spaces/trans-farmer/circadian_rhythm_soundscape
+Additionally, visualization of the output has also been implemented via our Huggingface interface: https://huggingface.co/spaces/confused-scientists/circadian_soundscape
 
 # Example visualisation output
 
