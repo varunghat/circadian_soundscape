@@ -51,9 +51,11 @@ Additionally, visualization of the output has also been implemented via our Hugg
 # Example output
 
 1.	Graphs from AST classification:  
-<img loading="lazy" width="30px" src="[/RGB_cirlce_out.jpg]" alt="RGB_cirlce_out.jpg" />
+<img loading="lazy" width="30px" src="./RGB_cirlce_out.jpg" alt="RGB_cirlce_out.jpg" />
 
 2.	Graphs from PowerminusNoise estimates:
+<img loading="lazy" width="30px" src="./ASTclass_out.jpg" alt="ASTclass_out.jpg" />
+	
 
 
 ## Data-specific information for:
