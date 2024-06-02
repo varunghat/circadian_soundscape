@@ -43,7 +43,6 @@ We also provide intermediate output from the 3 sites mentioned above. For each s
 ### Relationship between files, if important: 
 The output from “AST_run.py” can be fed into “graph_classification.py” to get graphs of daily patterns of acoustic activity probabilities as predicted by the AST for crickets, frogs, animal, birds and human sounds.
 The output from “powerminusnoise.R” must be fed into “Post-processing2_line.py” to get Output 2 as mentioned above. This should then be processed with “renametoadjustGMToff.py” and the output from which can be used in “Graph_PMN.ipynb” to create visualisations. Examples of this is included later in this readme file. 
-Additionally, visualization of the output has also been implemented via our Huggingface interface: https://huggingface.co/spaces/confused-scientists/circadian_soundscape
 
 # Example visualisation output
 
@@ -54,4 +53,5 @@ Additionally, visualization of the output has also been implemented via our Hugg
 <img loading="lazy" width="200px" src="./RGB_cirlce_out.jpg" alt="RGB_cirlce_out.jpg" />
 Image shows PMN estimates visualised as RGB composites for 3 frequency bins i.e. Red: 0-1500 Hz (denoting acoustic activity in the lower ranges i.e. certain birds, mammals and possible human activity); Green: 1500-5000 Hz (denoting bird activity) and Blue: 5000-10000 Hz (denoting insects).
 
-All graphs generated can be found in 'results' folder. 
+All graphs generated from AST classification be found in '/figure' folder. PMN graphs like the ones generated above (and more) can be created using the "Graph_PMN.ipynb" script. 
+Additionally, visualization of the output has also been implemented via our Huggingface interface: https://huggingface.co/spaces/confused-scientists/circadian_soundscape
