@@ -19,10 +19,10 @@ end_day = "11"
 all_files = os.listdir(drive)
 files = [f for f in all_files if f.endswith(".csv")]
 
-
+# For one day:
 files = [f for f in all_files if f.startswith(chosen_day)]
 
-
+# multiple days:
 chosen_days = [
     year + month + "{:02d}".format(i) for i in range(int(start_day), int(end_day) + 1)
 ]
