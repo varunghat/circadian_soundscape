@@ -82,7 +82,7 @@ calc_PMN <- function(files = files, out = 'df', parallel = 8){
         # Read  wav file
         sound <- readWave(i, from = k, to = k + 1, units = 'minutes')
 
-        # Calculate amplitude
+        # Calculate amplitude, changing bin size is key to be done here: "wl = xxx"
         raw.spectro <- seewave::spectro(sound, wl = 384, wn = "hamming", ovlp = 0, plot = FALSE)$amp
 
         # Smooth the noise profile using a moving average filter
@@ -104,7 +104,7 @@ calc_PMN <- function(files = files, out = 'df', parallel = 8){
         # Calculate Power Minus Noise (PMNsp)
         PMN <- apply(ale.matrix, 1, sum)
 
-        # Return data frame with PMN values
+        # Return data frame with PMN values, 1:384 should match "wl" for proper indexing
         df <- data.table("Frequency" = 1:384, "PMN" = PMN, "Noise" = spectro.mode, "Minute" = k)
 
         return (df)
@@ -129,10 +129,6 @@ calc_PMN <- function(files = files, out = 'df', parallel = 8){
 }
 
 # Example usage
-#calc_PMN(files = '/Users/johanvandenhoogen/ETH/Projects/costa_rica/data/wav_clips',
-#         out = '/Users/johanvandenhoogen/ETH/Projects/tmp',
-#         parallel = 8)
-
 calc_PMN(files = 'C:/Users/lhauser/Downloads/Audio/Ingles/subset',
          out = 'C:/Users/lhauser/Documents/Biodiv-Watch/EcoHackathon/pmn_gmt',
          parallel = 8)
