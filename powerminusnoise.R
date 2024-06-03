@@ -1,3 +1,5 @@
+# Original code by: Dr. Johan van den Hoogen,  johan.vandenhoogen@usys.ethz.ch
+
 #' @title PMN Calculation Function
 #' @description This function calculates the Power Minus Noise (PMN) index for each minute of a wav file.
 #'
