@@ -2,7 +2,8 @@
 """
 Created on Fri May 31 21:04:10 2024
 
-@author: lhauser
+@author: leon hauser
+leon.hauser@geo.uzh.ch
 """
 
 import os
