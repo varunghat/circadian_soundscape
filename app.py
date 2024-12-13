@@ -1,10 +1,17 @@
 import streamlit as st
-
+import numpy as np
+import pandas as pd
+import os
+import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+from scripts import process
+from scripts import plot
+####################
+# Streamlit config
 if 'NUM_FREQ_BINS' not in st.session_state:
     st.session_state.NUM_FREQ_BINS = 1
 
 MAX_FREQ_BINS = 5
-
 
 st.set_page_config(
     page_title="Circadian Soundscape Visualizer",
@@ -14,6 +21,22 @@ st.set_page_config(
 )
 st.title('Circadian Soundscape Visualizer')
 st.write('This is a simple web app that visualizes the circadian soundscape of a location.')
+####################
+
+
+def plot_file(file_path):
+
+    df = pd.read_csv(file_path, index_col=0)
+    df = process.smooth_data(df)
+
+    fig1 = plot.plot_results_line(df, "Power-Minus-Noise", "-", save=False)
+    fig2 = plot.plot_results_polar(df, "Power-Minus-Noise", "-", save=False)
+    fig3 = plot.plot_results_color(df, "Power-Minus-Noise", "-", save=False)
+    fig4 = plot.plot_results_color_polar(df, "Power-Minus-Noise", "-", save=False)
+    return fig1, fig2, fig3, fig4
+
+
+
 
 # Read a file or folder
 uploaded_files = st.file_uploader(
@@ -64,7 +87,13 @@ freq_bins = []
 for i in range(st.session_state.NUM_FREQ_BINS):
     freq_bins.append((st.session_state[f'min_freq_{i}'],st.session_state[f'max_freq_{i}']))
 
+# Add a way to upload csv files
+csv_upload = st.file_uploader("Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)", type=['csv'])
+
 # Button
 if st.button('Visualize', key='visualize_button'):
     st.write('Visualizing...')
-    #TODO: Add visualization code here
+    #TODO: Add visualization code here for PMN
+    plots = plot_file(csv_upload)
+    for fig in plots:
+        st.pyplot(fig)
