@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import os
+import random
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from scripts import process
@@ -12,6 +12,24 @@ if 'NUM_FREQ_BINS' not in st.session_state:
     st.session_state.NUM_FREQ_BINS = 1
 
 MAX_FREQ_BINS = 5
+
+# List of colors to be used for the plots as default
+COLOR_LIST = [
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
+]
+
+# List of icons to be used for the plots as default
+# car, bug, elephant, bird, bat, human, frog
+icon_list = ['🚗', '🦗' , '🐘', '🐦','🦇','🚶','🐸']
 
 st.set_page_config(
     page_title="Circadian Soundscape Visualizer",
@@ -60,18 +78,19 @@ offset = st.number_input('Timezone offset (hours)', min_value=-12.0, max_value=1
 offset = round(offset * 2) / 2
 st.write('Offset:', offset)
 
+
 #TODO: Is timezone selection necessary? (Daylight savings, etc added problems)
 
 # Frequency bins
 
 
-cols = st.columns([10,10,2,2],vertical_alignment='bottom')
-with cols[2]:
+cols = st.columns([10,10,1,1.5,2.1,2],vertical_alignment='bottom')
+with cols[4]:
     #st.write('Frequency bins')
     if st.button('add freq bins',key='add_button',disabled=(st.session_state.NUM_FREQ_BINS==MAX_FREQ_BINS)) and st.session_state.NUM_FREQ_BINS < MAX_FREQ_BINS:
         st.session_state.NUM_FREQ_BINS += 1
         
-with cols[3]:
+with cols[5]:
     #st.write('Frequency bins')
     if st.button('remove',key='remove_button',disabled=(st.session_state.NUM_FREQ_BINS==1)) and st.session_state.NUM_FREQ_BINS > 1:
         st.session_state.NUM_FREQ_BINS -= 1
@@ -81,11 +100,32 @@ for i in range(st.session_state.NUM_FREQ_BINS):
         min_freq = st.number_input('Min frequency (Hz)', min_value=0, value=0, step=1, key=f'min_freq_{i}')
     with cols[1]:
         max_freq = st.number_input('Max frequency (Hz)', min_value=0, value=22050, step=1,key=f'max_freq_{i}')
+    with cols[2]:
+        # Color picker
+        color = st.color_picker('Color', key=f'color_{i}', value=COLOR_LIST[i % len(COLOR_LIST)])
+    with cols[3]:
+        # icon picker
+        icon = st.selectbox('Icon', icon_list, key=f'icon_{i}', index=i % len(icon_list))
 
-# Get the values of the frequency bins
+# Get the values of the frequency bins, colors, and icons
 freq_bins = []
+colors = []
+icons = []
 for i in range(st.session_state.NUM_FREQ_BINS):
     freq_bins.append((st.session_state[f'min_freq_{i}'],st.session_state[f'max_freq_{i}']))
+    colors.append(st.session_state[f'color_{i}'])
+    icons.append(st.session_state[f'icon_{i}'])
+
+# TODO: Do we need to make sure frequency bins are not overlapping?
+
+
+# Check if the user has selected same colors for different bins
+if len(colors) != len(set(colors)):
+    st.error('You have selected the same color for different frequency bins.')
+
+# Check if the user has selected same icons for different bins
+if len(icons) != len(set(icons)):
+    st.error('You have selected the same icon for different frequency bins.')
 
 # Add a way to upload csv files
 csv_upload = st.file_uploader("Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)", type=['csv'])
