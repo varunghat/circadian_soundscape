@@ -27,9 +27,9 @@ COLOR_LIST = [
     "#17becf",
 ]
 
-# List of animal emojis to be used for the plots as default
-# car, human, bug, elephant, bird, frog, bat
-animal_emoji_list = ['🚗', '🚶', '🦗' , '🐘', '🐦', '🐸', '🦇']
+# List of icons to be used for the plots as default
+# car, bug, elephant, bird, bat, human, frog
+icon_list = ['🚗', '🦗' , '🐘', '🐦','🦇','🚶','🐸']
 
 st.set_page_config(
     page_title="Circadian Soundscape Visualizer",
@@ -104,19 +104,28 @@ for i in range(st.session_state.NUM_FREQ_BINS):
         # Color picker
         color = st.color_picker('Color', key=f'color_{i}', value=COLOR_LIST[i % len(COLOR_LIST)])
     with cols[3]:
-        # Animal emoji picker
-        animal_emoji = st.selectbox('Icon', animal_emoji_list, key=f'animal_emoji_{i}', index=i % len(animal_emoji_list))
+        # icon picker
+        icon = st.selectbox('Icon', icon_list, key=f'icon_{i}', index=i % len(icon_list))
 
-# Get the values of the frequency bins, colors, and animal emojis
+# Get the values of the frequency bins, colors, and icons
 freq_bins = []
 colors = []
-animal_emojis = []
+icons = []
 for i in range(st.session_state.NUM_FREQ_BINS):
     freq_bins.append((st.session_state[f'min_freq_{i}'],st.session_state[f'max_freq_{i}']))
     colors.append(st.session_state[f'color_{i}'])
-    animal_emojis.append(st.session_state[f'animal_emoji_{i}'])
+    icons.append(st.session_state[f'icon_{i}'])
 
 # TODO: Do we need to make sure frequency bins are not overlapping?
+
+
+# Check if the user has selected same colors for different bins
+if len(colors) != len(set(colors)):
+    st.error('You have selected the same color for different frequency bins.')
+
+# Check if the user has selected same icons for different bins
+if len(icons) != len(set(icons)):
+    st.error('You have selected the same icon for different frequency bins.')
 
 # Add a way to upload csv files
 csv_upload = st.file_uploader("Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)", type=['csv'])
