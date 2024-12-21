@@ -2,13 +2,19 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import random
+
+from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-from scripts import process
-from scripts import plot
 
 import tkinter as tk
 from tkinter import filedialog
+
+from scripts import process
+from scripts import plot
+from scripts.utils import get_sunrise_sunset
+
+
 
 
 
@@ -113,7 +119,10 @@ with button_cols[2]:
 
 
 if folder_select_button:
+
+    # Select the folder containing the audio files
     selected_folder_path = select_folder()
+
     st.session_state.folder_path = selected_folder_path
     st.session_state.selected_files = None
 
@@ -124,7 +133,10 @@ if folder_select_button:
 
 
 if file_select_button:
+
+    # Select the audio files
     selected_files = select_files()
+
     st.session_state.selected_files = selected_files
     st.session_state.folder_path = None
 
@@ -202,13 +214,102 @@ if len(colors) != len(set(colors)):
 if len(icons) != len(set(icons)):
     st.error('You have selected the same icon for different frequency bins.')
 
+# extra options
+st.subheader("Additional options")
+
+# Check if the user wants sunrise, sunset and solar noon times to be plotted
+sunrise_sunset = st.checkbox("Plot sunrise, sunset and solar noon times (if available) :sunrise:")
+
+sunrise_sunset_data = None
+
+if sunrise_sunset:
+    lat = st.text_input('Latitude', value='0.0', key='lat')
+    lng = st.text_input('Longitude', value='0.0', key='lng')
+
+    # Check if the user has entered valid latitude and longitude
+    try:
+        float(lat)
+        float(lng)
+
+        if not (-90 <= float(lat) <= 90):
+            st.error('Please enter a valid latitude between -90 and 90.')
+
+        if not (-180 <= float(lng) <= 180):
+            st.error('Please enter a valid longitude between -180 and 180.')
+    except ValueError:
+        st.error('Please enter **valid** latitude and longitude.')
+
+    
+    #date = st.date_input('Date', value=None, min_value=None, max_value=None, key='date')
+    
+    # TODO: Get date from the audio file names
+    #sunrise_sunset_data = get_sunrise_sunset(lat, lng, date)
+
+
+
 # Add a way to upload csv files
 csv_upload = st.file_uploader("Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)", type=['csv'])
 
 # Button
 if st.button('Visualize', key='visualize_button'):
     st.write('Visualizing...')
+    selected_files = None
+    # Extract the dates from the audio files
+    if st.session_state.folder_path:
+        # Collect all audio files in the selected folder with specified extensions
+        audio_extensions = ['.wav', '.mp3', '.flac']
+        all_files = list(Path(st.session_state.folder_path).rglob('*'))
+        selected_files = [file for file in all_files if file.suffix.lower() in audio_extensions]
+    elif st.session_state.selected_files:
+        selected_files = st.session_state.selected_files
+        selected_files = [Path(file) for file in selected_files]
+    else:
+        st.error('Please select a folder or files to proceed.')
+        st.stop()
+
+    # Check if the user has selected any files
+    if selected_files is not None:
+        
+        # Get all the dates from the selected files
+        dates = set()
+
+        for file in selected_files:
+            if audio_format == "Audiomoth: YYYYMMDD_hhmmss.wav":
+                date_str = file.stem.split('_')[0]
+            elif audio_format == "Songmeter: Prefix_YYYYMMDD_hhmmss.wav":
+                date_str = file.stem.split('_')[1]
+            else:
+                st.error('Invalid audio format selected.')
+                st.stop()
+            dates.add(date_str)
+
+        # DEBUG CODE
+        st.write(f"Number of dates: {len(dates)}")
+        # DEBUG CODE END
+
+        # Fetch sunrise, sunset and solar noon times for each date if the user has selected the option
+        #TODO: Add check to see if dates are consecutive and if so, fetch the range of dates using the api
+        if sunrise_sunset:
+            sunrise_sunset_data = {}
+            # Fetching sunrise, sunset loading
+            with st.spinner('Fetching sunrise, sunset and solar noon times...'):
+                for date in dates:
+                    sunrise_sunset_data[date] = get_sunrise_sunset(lat, lng, date)
+
+        # DEBUG CODE
+        st.write(f"Sunrise, sunset and solar noon times: {sunrise_sunset_data}")
+        # DEBUG CODE END
+
+        
+
+
+
+
+
     #TODO: Add visualization code here for PMN
+
+    
+
     plots = plot_file(csv_upload)
     for fig in plots:
         st.pyplot(fig)
