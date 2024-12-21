@@ -61,10 +61,10 @@ The output from “powerminusnoise.R” must be fed into “Post-processing2_lin
 # Example visualisation output
 
 1. Graphs from AST classification:  
-   <img loading="lazy" width="200px" src="./ASTclass_out.jpg" alt="ASTclass_out.jpg" />
+   <img loading="lazy" width="200px" src="./images/ASTclass_out.jpg" alt="ASTclass_out.jpg" />
 
 2. Graphs from PowerminusNoise estimates:
-   <img loading="lazy" width="200px" src="./RGB_cirlce_out.jpg" alt="RGB_cirlce_out.jpg" />
+   <img loading="lazy" width="200px" src="./images/RGB_cirlce_out.jpg" alt="RGB_cirlce_out.jpg" />
    Image shows PMN estimates visualised as RGB composites for 3 frequency bins i.e. Red: 0-1500 Hz (denoting acoustic activity in the lower ranges i.e. certain birds, mammals and possible human activity); Green: 1500-5000 Hz (denoting bird activity) and Blue: 5000-10000 Hz (denoting insects).
 
 All graphs generated from AST classification be found in '/figure' folder. PMN graphs like the ones generated above (and more) can be created using the "Graph_PMN.ipynb" script.
