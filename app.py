@@ -6,6 +6,12 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from scripts import process
 from scripts import plot
+
+import tkinter as tk
+from tkinter import filedialog
+
+
+
 ####################
 # Streamlit config
 if 'NUM_FREQ_BINS' not in st.session_state:
@@ -41,8 +47,40 @@ st.title('Circadian Soundscape Visualizer')
 st.write('This is a simple web app that visualizes the circadian soundscape of a location.')
 ####################
 
+def select_folder():
+    """
+    Function to select a folder using a file dialog in tkinter
+    Returns the path of the selected folder
+    """
+    root = tk.Tk()
+    root.iconify()
+    folder_path = filedialog.askdirectory(master=root)
+    root.destroy()
+    return folder_path
+
+def select_files():
+    """
+    Function to select files using a file dialog in tkinter
+    Returns the paths of the selected files
+    """
+    root = tk.Tk()
+    root.iconify()
+    file_paths = filedialog.askopenfilenames(master=root)
+    root.destroy()
+    return file_paths
+
 
 def plot_file(file_path):
+    """
+    Function to plot the results from the PMN CSV file
+    Args:
+        file_path (str): Path to the PMN CSV file
+    Returns:
+        fig1 (matplotlib.figure.Figure): Line plot of the PMN data
+        fig2 (matplotlib.figure.Figure): Polar plot of the PMN data
+        fig3 (matplotlib.figure.Figure): Color plot of the PMN data
+        fig4 (matplotlib.figure.Figure): Color polar plot of the PMN data
+    """
 
     df = pd.read_csv(file_path, index_col=0)
     df = process.smooth_data(df)
@@ -55,13 +93,50 @@ def plot_file(file_path):
 
 
 
+# Select the folder containing the audio files or select the audio files
 
-# Read a file or folder
-uploaded_files = st.file_uploader(
-    "Choose audiofiles",
-    type=['wav', 'mp3', 'flac'], 
-    accept_multiple_files=True) #TODO: Add more file types
+st.subheader("File selection")
 
+st.warning("**NOTE:** The file selection window CAN OPEN **MINIMIZED**, please **CHECK THE TASKBAR** for the file dialog window.")
+button_cols = st.columns([2,1,2,5])
+with button_cols[0]:
+    st.write("Select the folder containing the audio files")
+    folder_select_button = st.button("Select folder :file_folder:")
+
+with button_cols[1]:
+    st.write("**OR**")
+    
+
+with button_cols[2]:
+    st.write("Select the audio files")
+    file_select_button = st.button("Select files :musical_note:")
+
+
+if folder_select_button:
+    selected_folder_path = select_folder()
+    st.session_state.folder_path = selected_folder_path
+    st.session_state.selected_files = None
+
+    # DEBUG CODE
+    if selected_folder_path:
+        st.write(f"Selected folder: {selected_folder_path}")
+    # DEBUG CODE END
+
+
+if file_select_button:
+    selected_files = select_files()
+    st.session_state.selected_files = selected_files
+    st.session_state.folder_path = None
+
+    # DEBUG CODE
+    if selected_files:
+        #st.write(f"Selected files: {selected_files}")
+        st.write(f"Number of files selected: {len(selected_files)}")
+    # DEBUG CODE END
+
+
+
+st.subheader("Options")
 # Options for the user
 # Audio file format
 audio_format = st.selectbox(
