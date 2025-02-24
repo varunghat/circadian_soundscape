@@ -5,7 +5,8 @@ This readme file was created by Confused_scientists for the AI+Environment Hacka
 # HOW TO RUN STREAMLIT
 
 1. Install streamlit by running `pip install streamlit`
-2. Run the following command in the terminal: `streamlit run app.py`
+2. Install requirements in your environment with `pip install -r requirements.txt`
+3. Run the following command in the terminal: `streamlit run app.py`
 
 # GENERAL INFORMATION
 
