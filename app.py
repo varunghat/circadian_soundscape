@@ -44,7 +44,7 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 st.title('Circadian Soundscape Visualizer')
-st.write('This is a simple web app that visualizes the circadian soundscape of a location.')
+st.write('Versatile browser-based tool for bio-acoustics analysis and circadian soundscape visualization')
 ####################
 
 def select_folder():
