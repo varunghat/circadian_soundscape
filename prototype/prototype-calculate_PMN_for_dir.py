@@ -208,20 +208,21 @@ def calculate_PMN_for_file(filepath):
     return df_output
 
 
-def calculate_PMN_for_dir(dir_input):
+def calculate_PMN_for_dir(dir_input, if_print=False):
     """
-    Find all .wav files and export PMN result for each file accordingly
+    Find all .wav files and export PMN result for each file accordingly in the same directory
     """
     files = next(os.walk(dir_input))[2]
     files = [x for x in files if x.endswith(".WAV")]
     files = np.sort(files)
-    file = files[0]
-    filepath = os.path.join(dir_input, file)
-    df_file_result = calculate_PMN_for_file(filepath)
-    filename = os.path.splitext(os.path.basename(file))[0]
-    filename_output = f"{filename}.csv"
-    df_file_result.to_csv(os.path.join(dir_input, filename_output))
-
+    for file in files:
+        filepath = os.path.join(dir_input, file)
+        df_file_result = calculate_PMN_for_file(filepath)
+        filename = os.path.splitext(os.path.basename(file))[0]
+        filename_output = f"{filename}.csv"
+        df_file_result.to_csv(os.path.join(dir_input, filename_output))
+        if if_print:
+            print(f"{filename_output} exported to {dir_input}")
 
 dir_input = """your input directory"""
 calculate_PMN_for_dir(dir_input)
