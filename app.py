@@ -76,11 +76,12 @@ def select_files():
     return file_paths
 
 
-def plot_file(file_path):
+def plot_file(file_path,sunrise_sunset_data):
     """
     Function to plot the results from the PMN CSV file
     Args:
         file_path (str): Path to the PMN CSV file
+        sunrise_sunset_data (dict): Dictionary containing the sunrise, sunset and solar noon times for each date
     Returns:
         fig1 (matplotlib.figure.Figure): Line plot of the PMN data
         fig2 (matplotlib.figure.Figure): Polar plot of the PMN data
@@ -95,6 +96,38 @@ def plot_file(file_path):
     fig2 = plot.plot_results_polar(df, "Power-Minus-Noise", "-", save=False)
     fig3 = plot.plot_results_color(df, "Power-Minus-Noise", "-", save=False)
     fig4 = plot.plot_results_color_polar(df, "Power-Minus-Noise", "-", save=False)
+
+    # Add the sunrise, sunset and solar noon times to the plots if available only to the circular plots (polar and color polar)
+    if sunrise_sunset_data is not None:
+        for date, data in sunrise_sunset_data.items():
+            # Convert the time into a variable with 360 degrees
+            data = data["results"]
+            if 'sunrise' in data:
+                # Convert the sunrise time to datetime. Sunrise time is in the format of date and time (e.g. 2024-12-21T07:00:00Z)
+                sunrise_time = pd.to_datetime(data['sunrise']).hour + pd.to_datetime(data['sunrise']).minute / 60
+                # Convert the time to radians
+                sunrise_time = (sunrise_time / 24) * 2 * np.pi
+
+                fig2.gca().axvline(x=sunrise_time, color='orange', linestyle='--', label='Sunrise')
+                fig4.gca().axvline(x=sunrise_time, color='orange', linestyle='--', label='Sunrise')
+            if 'sunset' in data:
+                # Convert the sunset time to datetime. Sunset time is in the format of date and time (e.g. 2024-12-21T17:00:00Z)
+                sunset_time = pd.to_datetime(data['sunset']).hour + pd.to_datetime(data['sunset']).minute / 60
+                # Convert the time to radians
+                sunset_time = (sunset_time / 24) * 2 * np.pi
+                fig2.gca().axvline(x=sunset_time, color='red', linestyle='--', label='Sunset')
+                fig4.gca().axvline(x=sunset_time, color='red', linestyle='--', label='Sunset')
+
+
+            if 'solar_noon' in data:
+                # Convert the solar noon time to datetime. Solar noon time is in the format of date and time (e.g. 2024-12-21T12:00:00Z)
+                solar_noon_time = pd.to_datetime(data['solar_noon']).hour + pd.to_datetime(data['solar_noon']).minute / 60
+                # Convert the time to radians
+                solar_noon_time = (solar_noon_time / 24) * 2 * np.pi
+                fig2.gca().axvline(x=solar_noon_time, color='green', linestyle='--', label='Solar Noon')
+                fig4.gca().axvline(x=solar_noon_time, color='green', linestyle='--', label='Solar Noon')
+
+    
     return fig1, fig2, fig3, fig4
 
 
@@ -239,13 +272,6 @@ if sunrise_sunset:
     except ValueError:
         st.error('Please enter **valid** latitude and longitude.')
 
-    
-    #date = st.date_input('Date', value=None, min_value=None, max_value=None, key='date')
-    
-    # TODO: Get date from the audio file names
-    #sunrise_sunset_data = get_sunrise_sunset(lat, lng, date)
-
-
 
 # Add a way to upload csv files
 csv_upload = st.file_uploader("Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)", type=['csv'])
@@ -300,16 +326,11 @@ if st.button('Visualize', key='visualize_button'):
         st.write(f"Sunrise, sunset and solar noon times: {sunrise_sunset_data}")
         # DEBUG CODE END
 
-        
-
-
-
-
 
     #TODO: Add visualization code here for PMN
 
     
 
-    plots = plot_file(csv_upload)
+    plots = plot_file(csv_upload,sunrise_sunset_data)
     for fig in plots:
         st.pyplot(fig)
