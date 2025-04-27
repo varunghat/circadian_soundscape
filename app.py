@@ -127,6 +127,19 @@ def plot_file(file_path,sunrise_sunset_data):
                 fig2.gca().axvline(x=solar_noon_time, color='green', linestyle='--', label='Solar Noon')
                 fig4.gca().axvline(x=solar_noon_time, color='green', linestyle='--', label='Solar Noon')
 
+        # TODO: Add better legend to the plots without deleting the previous legend
+        # For fig2
+        top = 0.95  # Y position (close to top)
+        right = 0.8  # X position (close to right)
+
+        fig2.text(right, top, "Sunrise: ---", color='orange', ha='right', va='top', fontsize=10)
+        fig2.text(right, top - 0.03, "Sunset: ---", color='red', ha='right', va='top', fontsize=10)
+        fig2.text(right, top - 0.06, "Solar Noon: ---", color='green', ha='right', va='top', fontsize=10)
+
+        # For fig4
+        fig4.text(right, top, "Sunrise: ---", color='orange', ha='right', va='top', fontsize=10)
+        fig4.text(right, top - 0.03, "Sunset: ---", color='red', ha='right', va='top', fontsize=10)
+        fig4.text(right, top - 0.06, "Solar Noon: ---", color='green', ha='right', va='top', fontsize=10)
     
     return fig1, fig2, fig3, fig4
 
