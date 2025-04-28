@@ -2,32 +2,6 @@
 
 This readme file was created by Confused_scientists for the AI+Environment Hackathon 2024
 
-# HOW TO RUN THE CODE
-
-Windows:
-
-1. Double-click start_app.bat
-
-NOTE: If you solely use Anaconda for python, open Anaconda Prompt and run the following command:
-
-```bash
-start_app.bat
-```
-
-Mac/Linux:
-
-1. Open terminal
-2. Navigate to the folder
-3. Run: chmod +x start_app.sh
-4. Run: ./start_app.sh
-
-The browser should open automatically. If not, copy the URL from the terminal and paste it into your browser. (e.g. http://localhost:8501)
-If you want to run the code in a different environment, you can use the following command to run the app:
-
-```bash
-streamlit run app.py --server.port your_port_no --server.address
-```
-
 # HOW TO RUN STREAMLIT
 
 1. Install streamlit by running `pip install streamlit`
