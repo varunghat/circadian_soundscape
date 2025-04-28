@@ -455,6 +455,7 @@ def plot_results_color_plotly(df, title, day, selection=[0, 1, 2], save=False, s
         width=1.1,
         hoverinfo='x+y',
         name='Power-Minus-Noise',
+        showlegend=False,
     ))
 
     # Set up x-ticks every hour
@@ -597,7 +598,8 @@ def plot_results_color_polar_plotly(df, title, day, selection=[0, 1, 2], save=Fa
             line=dict(width=0)  # No white border
         ),
         opacity=1,
-        hoverinfo='theta+r'
+        hoverinfo='theta+r',
+        showlegend=False
     ))
 
     r_max = df2["sum"].max()

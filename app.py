@@ -79,71 +79,77 @@ def select_files():
     return file_paths
 
 
-def plot_file(file_path,sunrise_sunset_data):
+def plot_file(file_path,sunrise_sunset_data, use_plotly=True):
     """
     Function to plot the results from the PMN CSV file
     Args:
         file_path (str): Path to the PMN CSV file
         sunrise_sunset_data (dict): Dictionary containing the sunrise, sunset and solar noon times for each date
+        use_plotly (bool): Whether to use plotly for plotting or not (will use matplotlib if False)
     Returns:
-        fig1 (matplotlib.figure.Figure): Line plot of the PMN data
-        fig2 (matplotlib.figure.Figure): Polar plot of the PMN data
-        fig3 (matplotlib.figure.Figure): Color plot of the PMN data
-        fig4 (matplotlib.figure.Figure): Color polar plot of the PMN data
+        fig1 : Line plot of the PMN data
+        fig2 : Polar plot of the PMN data
+        fig3 : Color plot of the PMN data
+        fig4 : Color polar plot of the PMN data
     """
 
     df = pd.read_csv(file_path, index_col=0)
     df = process.smooth_data(df)
 
-    fig1 = plot.plot_results_line(df, "Power-Minus-Noise", "-", save=False)
-    fig2 = plot.plot_results_polar(df, "Power-Minus-Noise", "-", save=False)
-    fig3 = plot.plot_results_color(df, "Power-Minus-Noise", "-", save=False)
-    fig4 = plot.plot_results_color_polar(df, "Power-Minus-Noise", "-", save=False)
+    fig1 = plot.plot_results_line_plotly(df, "Power-Minus-Noise", "-", save=False)
+    fig2 = plot.plot_results_polar_plotly(df, "Power-Minus-Noise", "-", save=False)
+    fig3 = plot.plot_results_color_plotly(df, "Power-Minus-Noise", "-", save=False)
+    fig4 = plot.plot_results_color_polar_plotly(df, "Power-Minus-Noise", "-", save=False)
 
     # Add the sunrise, sunset and solar noon times to the plots if available only to the circular plots (polar and color polar)
-    if sunrise_sunset_data is not None:
-        for date, data in sunrise_sunset_data.items():
-            # Convert the time into a variable with 360 degrees
-            data = data["results"]
-            if 'sunrise' in data:
-                # Convert the sunrise time to datetime. Sunrise time is in the format of date and time (e.g. 2024-12-21T07:00:00Z)
-                sunrise_time = pd.to_datetime(data['sunrise']).hour + pd.to_datetime(data['sunrise']).minute / 60
-                # Convert the time to radians
-                sunrise_time = (sunrise_time / 24) * 2 * np.pi
+    if use_plotly == False:
+        if sunrise_sunset_data is not None:
+            for date, data in sunrise_sunset_data.items():
+                # Convert the time into a variable with 360 degrees
+                data = data["results"]
+                if 'sunrise' in data:
+                    # Convert the sunrise time to datetime. Sunrise time is in the format of date and time (e.g. 2024-12-21T07:00:00Z)
+                    sunrise_time = pd.to_datetime(data['sunrise']).hour + pd.to_datetime(data['sunrise']).minute / 60
+                    # Convert the time to radians
+                    sunrise_time = (sunrise_time / 24) * 2 * np.pi
 
-                fig2.gca().axvline(x=sunrise_time, color='orange', linestyle='--', label='Sunrise')
-                fig4.gca().axvline(x=sunrise_time, color='orange', linestyle='--', label='Sunrise')
-            if 'sunset' in data:
-                # Convert the sunset time to datetime. Sunset time is in the format of date and time (e.g. 2024-12-21T17:00:00Z)
-                sunset_time = pd.to_datetime(data['sunset']).hour + pd.to_datetime(data['sunset']).minute / 60
-                # Convert the time to radians
-                sunset_time = (sunset_time / 24) * 2 * np.pi
-                fig2.gca().axvline(x=sunset_time, color='red', linestyle='--', label='Sunset')
-                fig4.gca().axvline(x=sunset_time, color='red', linestyle='--', label='Sunset')
+                    fig2.gca().axvline(x=sunrise_time, color='orange', linestyle='--')
+                    fig4.gca().axvline(x=sunrise_time, color='orange', linestyle='--')
+                if 'sunset' in data:
+                    # Convert the sunset time to datetime. Sunset time is in the format of date and time (e.g. 2024-12-21T17:00:00Z)
+                    sunset_time = pd.to_datetime(data['sunset']).hour + pd.to_datetime(data['sunset']).minute / 60
+                    # Convert the time to radians
+                    sunset_time = (sunset_time / 24) * 2 * np.pi
+                    fig2.gca().axvline(x=sunset_time, color='red', linestyle='--')
+                    fig4.gca().axvline(x=sunset_time, color='red', linestyle='--')
 
 
-            if 'solar_noon' in data:
-                # Convert the solar noon time to datetime. Solar noon time is in the format of date and time (e.g. 2024-12-21T12:00:00Z)
-                solar_noon_time = pd.to_datetime(data['solar_noon']).hour + pd.to_datetime(data['solar_noon']).minute / 60
-                # Convert the time to radians
-                solar_noon_time = (solar_noon_time / 24) * 2 * np.pi
-                fig2.gca().axvline(x=solar_noon_time, color='green', linestyle='--', label='Solar Noon')
-                fig4.gca().axvline(x=solar_noon_time, color='green', linestyle='--', label='Solar Noon')
 
-        # TODO: Add better legend to the plots without deleting the previous legend
-        # For fig2
-        top = 0.95  # Y position (close to top)
-        right = 0.8  # X position (close to right)
+                if 'solar_noon' in data:
+                    # Convert the solar noon time to datetime. Solar noon time is in the format of date and time (e.g. 2024-12-21T12:00:00Z)
+                    solar_noon_time = pd.to_datetime(data['solar_noon']).hour + pd.to_datetime(data['solar_noon']).minute / 60
+                    # Convert the time to radians
+                    solar_noon_time = (solar_noon_time / 24) * 2 * np.pi
+                    fig2.gca().axvline(x=solar_noon_time, color='blue', linestyle='--')
+                    fig4.gca().axvline(x=solar_noon_time, color='blue', linestyle='--')
 
-        fig2.text(right, top, "Sunrise: ---", color='orange', ha='right', va='top', fontsize=10)
-        fig2.text(right, top - 0.03, "Sunset: ---", color='red', ha='right', va='top', fontsize=10)
-        fig2.text(right, top - 0.06, "Solar Noon: ---", color='green', ha='right', va='top', fontsize=10)
+            # For fig2
+            top = 0.95  # Y position (close to top)
+            right = 0.8  # X position (close to right)
 
-        # For fig4
-        fig4.text(right, top, "Sunrise: ---", color='orange', ha='right', va='top', fontsize=10)
-        fig4.text(right, top - 0.03, "Sunset: ---", color='red', ha='right', va='top', fontsize=10)
-        fig4.text(right, top - 0.06, "Solar Noon: ---", color='green', ha='right', va='top', fontsize=10)
-    
+            fig2.text(right, top, "Sunrise: ---", color='orange', ha='right', va='top', fontsize=10)
+            fig2.text(right, top - 0.03, "Sunset: ---", color='red', ha='right', va='top', fontsize=10)
+            fig2.text(right, top - 0.06, "Solar Noon: ---", color='green', ha='right', va='top', fontsize=10)
+
+            # For fig4
+            fig4.text(right, top, "Sunrise: ---", color='orange', ha='right', va='top', fontsize=10)
+            fig4.text(right, top - 0.03, "Sunset: ---", color='red', ha='right', va='top', fontsize=10)
+            fig4.text(right, top - 0.06, "Solar Noon: ---", color='green', ha='right', va='top', fontsize=10)
+
+        
+            
+          
+                
     return fig1, fig2, fig3, fig4
 
 # Add a button to close the app
@@ -305,6 +311,7 @@ if sunrise_sunset:
 # Add a way to upload csv files
 csv_upload = st.file_uploader("Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)", type=['csv'])
 
+use_plotly = st.toggle("Use Plotly (Interactive)?", value=True)
 # Button
 if st.button('Visualize', key='visualize_button'):
     st.write('Visualizing...')
@@ -360,6 +367,12 @@ if st.button('Visualize', key='visualize_button'):
 
     
 
-    plots = plot_file(csv_upload,sunrise_sunset_data)
-    for fig in plots:
-        st.pyplot(fig)
+    if use_plotly:
+        plots = plot_file(csv_upload,sunrise_sunset_data, use_plotly=True)
+        for fig in plots:
+            st.plotly_chart(fig, use_container_width=True)
+            
+    else:
+        plots = plot_file(csv_upload,sunrise_sunset_data, use_plotly=False)
+        for fig in plots:
+            st.pyplot(fig)
