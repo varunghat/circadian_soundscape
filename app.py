@@ -2,13 +2,19 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import random
+
+from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-from scripts import process
-from scripts import plot
 
 import tkinter as tk
 from tkinter import filedialog
+
+from scripts import process
+from scripts import plot
+from scripts.utils import get_sunrise_sunset
+
+
 
 
 
@@ -70,11 +76,12 @@ def select_files():
     return file_paths
 
 
-def plot_file(file_path):
+def plot_file(file_path,sunrise_sunset_data):
     """
     Function to plot the results from the PMN CSV file
     Args:
         file_path (str): Path to the PMN CSV file
+        sunrise_sunset_data (dict): Dictionary containing the sunrise, sunset and solar noon times for each date
     Returns:
         fig1 (matplotlib.figure.Figure): Line plot of the PMN data
         fig2 (matplotlib.figure.Figure): Polar plot of the PMN data
@@ -89,6 +96,51 @@ def plot_file(file_path):
     fig2 = plot.plot_results_polar(df, "Power-Minus-Noise", "-", save=False)
     fig3 = plot.plot_results_color(df, "Power-Minus-Noise", "-", save=False)
     fig4 = plot.plot_results_color_polar(df, "Power-Minus-Noise", "-", save=False)
+
+    # Add the sunrise, sunset and solar noon times to the plots if available only to the circular plots (polar and color polar)
+    if sunrise_sunset_data is not None:
+        for date, data in sunrise_sunset_data.items():
+            # Convert the time into a variable with 360 degrees
+            data = data["results"]
+            if 'sunrise' in data:
+                # Convert the sunrise time to datetime. Sunrise time is in the format of date and time (e.g. 2024-12-21T07:00:00Z)
+                sunrise_time = pd.to_datetime(data['sunrise']).hour + pd.to_datetime(data['sunrise']).minute / 60
+                # Convert the time to radians
+                sunrise_time = (sunrise_time / 24) * 2 * np.pi
+
+                fig2.gca().axvline(x=sunrise_time, color='orange', linestyle='--', label='Sunrise')
+                fig4.gca().axvline(x=sunrise_time, color='orange', linestyle='--', label='Sunrise')
+            if 'sunset' in data:
+                # Convert the sunset time to datetime. Sunset time is in the format of date and time (e.g. 2024-12-21T17:00:00Z)
+                sunset_time = pd.to_datetime(data['sunset']).hour + pd.to_datetime(data['sunset']).minute / 60
+                # Convert the time to radians
+                sunset_time = (sunset_time / 24) * 2 * np.pi
+                fig2.gca().axvline(x=sunset_time, color='red', linestyle='--', label='Sunset')
+                fig4.gca().axvline(x=sunset_time, color='red', linestyle='--', label='Sunset')
+
+
+            if 'solar_noon' in data:
+                # Convert the solar noon time to datetime. Solar noon time is in the format of date and time (e.g. 2024-12-21T12:00:00Z)
+                solar_noon_time = pd.to_datetime(data['solar_noon']).hour + pd.to_datetime(data['solar_noon']).minute / 60
+                # Convert the time to radians
+                solar_noon_time = (solar_noon_time / 24) * 2 * np.pi
+                fig2.gca().axvline(x=solar_noon_time, color='green', linestyle='--', label='Solar Noon')
+                fig4.gca().axvline(x=solar_noon_time, color='green', linestyle='--', label='Solar Noon')
+
+        # TODO: Add better legend to the plots without deleting the previous legend
+        # For fig2
+        top = 0.95  # Y position (close to top)
+        right = 0.8  # X position (close to right)
+
+        fig2.text(right, top, "Sunrise: ---", color='orange', ha='right', va='top', fontsize=10)
+        fig2.text(right, top - 0.03, "Sunset: ---", color='red', ha='right', va='top', fontsize=10)
+        fig2.text(right, top - 0.06, "Solar Noon: ---", color='green', ha='right', va='top', fontsize=10)
+
+        # For fig4
+        fig4.text(right, top, "Sunrise: ---", color='orange', ha='right', va='top', fontsize=10)
+        fig4.text(right, top - 0.03, "Sunset: ---", color='red', ha='right', va='top', fontsize=10)
+        fig4.text(right, top - 0.06, "Solar Noon: ---", color='green', ha='right', va='top', fontsize=10)
+    
     return fig1, fig2, fig3, fig4
 
 
@@ -113,7 +165,10 @@ with button_cols[2]:
 
 
 if folder_select_button:
+
+    # Select the folder containing the audio files
     selected_folder_path = select_folder()
+
     st.session_state.folder_path = selected_folder_path
     st.session_state.selected_files = None
 
@@ -124,7 +179,10 @@ if folder_select_button:
 
 
 if file_select_button:
+
+    # Select the audio files
     selected_files = select_files()
+
     st.session_state.selected_files = selected_files
     st.session_state.folder_path = None
 
@@ -202,13 +260,90 @@ if len(colors) != len(set(colors)):
 if len(icons) != len(set(icons)):
     st.error('You have selected the same icon for different frequency bins.')
 
+# extra options
+st.subheader("Additional options")
+
+# Check if the user wants sunrise, sunset and solar noon times to be plotted
+sunrise_sunset = st.checkbox("Plot sunrise, sunset and solar noon times (if available) :sunrise:")
+
+sunrise_sunset_data = None
+
+if sunrise_sunset:
+    lat = st.text_input('Latitude', value='0.0', key='lat')
+    lng = st.text_input('Longitude', value='0.0', key='lng')
+
+    # Check if the user has entered valid latitude and longitude
+    try:
+        float(lat)
+        float(lng)
+
+        if not (-90 <= float(lat) <= 90):
+            st.error('Please enter a valid latitude between -90 and 90.')
+
+        if not (-180 <= float(lng) <= 180):
+            st.error('Please enter a valid longitude between -180 and 180.')
+    except ValueError:
+        st.error('Please enter **valid** latitude and longitude.')
+
+
 # Add a way to upload csv files
 csv_upload = st.file_uploader("Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)", type=['csv'])
 
 # Button
 if st.button('Visualize', key='visualize_button'):
     st.write('Visualizing...')
+    selected_files = None
+    # Extract the dates from the audio files
+    if st.session_state.folder_path:
+        # Collect all audio files in the selected folder with specified extensions
+        audio_extensions = ['.wav', '.mp3', '.flac']
+        all_files = list(Path(st.session_state.folder_path).rglob('*'))
+        selected_files = [file for file in all_files if file.suffix.lower() in audio_extensions]
+    elif st.session_state.selected_files:
+        selected_files = st.session_state.selected_files
+        selected_files = [Path(file) for file in selected_files]
+    else:
+        st.error('Please select a folder or files to proceed.')
+        st.stop()
+
+    # Check if the user has selected any files
+    if selected_files is not None:
+        
+        # Get all the dates from the selected files
+        dates = set()
+
+        for file in selected_files:
+            if audio_format == "Audiomoth: YYYYMMDD_hhmmss.wav":
+                date_str = file.stem.split('_')[0]
+            elif audio_format == "Songmeter: Prefix_YYYYMMDD_hhmmss.wav":
+                date_str = file.stem.split('_')[1]
+            else:
+                st.error('Invalid audio format selected.')
+                st.stop()
+            dates.add(date_str)
+
+        # DEBUG CODE
+        st.write(f"Number of dates: {len(dates)}")
+        # DEBUG CODE END
+
+        # Fetch sunrise, sunset and solar noon times for each date if the user has selected the option
+        #TODO: Add check to see if dates are consecutive and if so, fetch the range of dates using the api
+        if sunrise_sunset:
+            sunrise_sunset_data = {}
+            # Fetching sunrise, sunset loading
+            with st.spinner('Fetching sunrise, sunset and solar noon times...'):
+                for date in dates:
+                    sunrise_sunset_data[date] = get_sunrise_sunset(lat, lng, date)
+
+        # DEBUG CODE
+        st.write(f"Sunrise, sunset and solar noon times: {sunrise_sunset_data}")
+        # DEBUG CODE END
+
+
     #TODO: Add visualization code here for PMN
-    plots = plot_file(csv_upload)
+
+    
+
+    plots = plot_file(csv_upload,sunrise_sunset_data)
     for fig in plots:
         st.pyplot(fig)
