@@ -10,12 +10,15 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
+import plotly.graph_objects as go
+
 import tkinter as tk
 from tkinter import filedialog
 
 from scripts import process
 from scripts import plot
 from scripts.utils import get_sunrise_sunset
+
 
 
 
@@ -96,13 +99,135 @@ def plot_file(file_path,sunrise_sunset_data, use_plotly=True):
     df = pd.read_csv(file_path, index_col=0)
     df = process.smooth_data(df)
 
-    fig1 = plot.plot_results_line_plotly(df, "Power-Minus-Noise", "-", save=False)
-    fig2 = plot.plot_results_polar_plotly(df, "Power-Minus-Noise", "-", save=False)
-    fig3 = plot.plot_results_color_plotly(df, "Power-Minus-Noise", "-", save=False)
-    fig4 = plot.plot_results_color_polar_plotly(df, "Power-Minus-Noise", "-", save=False)
+    if use_plotly:
 
-    # Add the sunrise, sunset and solar noon times to the plots if available only to the circular plots (polar and color polar)
-    if use_plotly == False:
+        fig1 = plot.plot_results_line_plotly(df, "Power-Minus-Noise", "-", save=False)
+        fig2 = plot.plot_results_polar_plotly(df, "Power-Minus-Noise", "-", save=False)
+        fig3 = plot.plot_results_color_plotly(df, "Power-Minus-Noise", "-", save=False)
+        fig4 = plot.plot_results_color_polar_plotly(df, "Power-Minus-Noise", "-", save=False)
+
+        # Add the sunrise, sunset and solar noon times to the plots if available only to the circular plots (polar and color polar)
+        if sunrise_sunset_data is not None:
+            r_max = df.max().max()  # Max value for radius line length
+
+            for date, data in sunrise_sunset_data.items():
+                data = data["results"]
+
+                if 'sunrise' in data:
+                    # Convert the sunrise time to datetime. Sunrise time is in the format of date and time (e.g. 2024-12-21T07:00:00Z)
+                    sunrise_time = pd.to_datetime(data['sunrise']).hour + pd.to_datetime(data['sunrise']).minute / 60
+                    sunrise_deg = (sunrise_time / 24) * 360
+
+                    fig2.add_trace(go.Scatterpolar(
+                        r=[-r_max, r_max],
+                        theta=[sunrise_deg, sunrise_deg],
+                        mode='lines',
+                        line=dict(color='orange', dash='dash'),
+                        showlegend=False
+                    ))
+                    fig4.add_trace(go.Scatterpolar(
+                        r=[-r_max*2, r_max*2],
+                        theta=[sunrise_deg, sunrise_deg],
+                        mode='lines',
+                        line=dict(color='orange', dash='dash'),
+                        showlegend=False
+                    ))
+
+                if 'sunset' in data:
+                    # Convert the sunset time to datetime. Sunset time is in the format of date and time (e.g. 2024-12-21T17:00:00Z)
+                    sunset_time = pd.to_datetime(data['sunset']).hour + pd.to_datetime(data['sunset']).minute / 60
+                    sunset_deg = (sunset_time / 24) * 360
+
+                    fig2.add_trace(go.Scatterpolar(
+                        r=[-r_max, r_max],
+                        theta=[sunset_deg, sunset_deg],
+                        mode='lines',
+                        line=dict(color='red', dash='dash'),
+                        showlegend=False
+                    ))
+                    fig4.add_trace(go.Scatterpolar(
+                        r=[-r_max*2, r_max*2],
+                        theta=[sunset_deg, sunset_deg],
+                        mode='lines',
+                        line=dict(color='red', dash='dash'),
+                        showlegend=False
+                    ))
+
+                if 'solar_noon' in data:
+                    # Convert the solar noon time to datetime. Solar noon time is in the format of date and time (e.g. 2024-12-21T12:00:00Z)
+                    solar_noon_time = pd.to_datetime(data['solar_noon']).hour + pd.to_datetime(data['solar_noon']).minute / 60
+                    solar_noon_deg = (solar_noon_time / 24) * 360
+
+                    fig2.add_trace(go.Scatterpolar(
+                        r=[-r_max, r_max],
+                        theta=[solar_noon_deg, solar_noon_deg],
+                        mode='lines',
+                        line=dict(color='blue', dash='dash'),
+                        showlegend=False
+                    ))
+                    fig4.add_trace(go.Scatterpolar(
+                        r=[-r_max*2, r_max*2],
+                        theta=[solar_noon_deg, solar_noon_deg],
+                        mode='lines',
+                        line=dict(color='blue', dash='dash'),
+                        showlegend=False
+                    ))
+            # Add legends for the lines in fig2 and fig4
+            fig2.add_trace(go.Scatterpolar(
+                r=[None],
+                theta=[None],
+                mode='lines',
+                line=dict(color='orange', dash='dash'),
+                name='Sunrise'
+            ))
+
+            fig2.add_trace(go.Scatterpolar(
+                r=[None],
+                theta=[None],
+                mode='lines',
+                line=dict(color='red', dash='dash'),
+                name='Sunset'
+            ))
+
+            fig2.add_trace(go.Scatterpolar(
+                r=[None],
+                theta=[None],
+                mode='lines',
+                line=dict(color='blue', dash='dash'),
+                name='Solar Noon'
+            ))
+
+            # Same thing for fig4 if you want
+            fig4.add_trace(go.Scatterpolar(
+                r=[None],
+                theta=[None],
+                mode='lines',
+                line=dict(color='orange', dash='dash'),
+                name='Sunrise'
+            ))
+            fig4.add_trace(go.Scatterpolar(
+                r=[None],
+                theta=[None],
+                mode='lines',
+                line=dict(color='red', dash='dash'),
+                name='Sunset'
+            ))
+            fig4.add_trace(go.Scatterpolar(
+                r=[None],
+                theta=[None],
+                mode='lines',
+                line=dict(color='blue', dash='dash'),
+                name='Solar Noon'
+            ))
+
+
+    else:
+        fig1 = plot.plot_results_line(df, "Power-Minus-Noise", "-", save=False)
+        fig2 = plot.plot_results_polar(df, "Power-Minus-Noise", "-", save=False)
+        fig3 = plot.plot_results_color(df, "Power-Minus-Noise", "-", save=False)
+        fig4 = plot.plot_results_color_polar(df, "Power-Minus-Noise", "-", save=False)
+
+        # Add the sunrise, sunset and solar noon times to the plots if available only to the circular plots (polar and color polar)
         if sunrise_sunset_data is not None:
             for date, data in sunrise_sunset_data.items():
                 # Convert the time into a variable with 360 degrees
@@ -122,8 +247,6 @@ def plot_file(file_path,sunrise_sunset_data, use_plotly=True):
                     sunset_time = (sunset_time / 24) * 2 * np.pi
                     fig2.gca().axvline(x=sunset_time, color='red', linestyle='--')
                     fig4.gca().axvline(x=sunset_time, color='red', linestyle='--')
-
-
 
                 if 'solar_noon' in data:
                     # Convert the solar noon time to datetime. Solar noon time is in the format of date and time (e.g. 2024-12-21T12:00:00Z)
