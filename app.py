@@ -1,9 +1,6 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import os
-import psutil
-import signal
 import random
 
 from pathlib import Path
@@ -146,19 +143,6 @@ def plot_file(file_path,sunrise_sunset_data):
     
     return fig1, fig2, fig3, fig4
 
-# Add a button to close the app
-col1, col2 = st.columns([4, 1])
-
-with col1:
-    st.info("Click the Close App ❌ button to safely close the app and then close this tab. It will shut down the server running in the background. Closing the tab alone will not shut down the server.  ")
-
-with col2:
-    close = st.button("❌ Close App", key="close_app_button")
-
-# Handle button press
-if close:
-    st.success("Shutting down the app. Please close this tab.")
-    os.kill(os.getpid(), signal.SIGTERM)
 
 
 # Select the folder containing the audio files or select the audio files
