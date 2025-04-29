@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
+
 def process_file(
     file_path,
     bin_labels,
@@ -41,6 +42,62 @@ def process_file(
         max_results[label].append(max_agg.get(label, np.nan))
         median_results[label].append(median_agg.get(label, np.nan))
 
+    return average_results, max_results, median_results, time_columns
+
+
+# Define frequency bins
+bins = [0, 1500, 5000, 10000, 20000, 60000]
+bin_labels = ["0-1500", "1500-5000", "5000-10000", "10k-20000", "20k-60000"]
+colors = ["blue", "green", "orange", "red", "purple"]
+
+
+def process_files(files, output_dir, freq_bins, colors, icons, offset):
+
+    # Calculate bin labels using the bins TODO: Would this work if bins are not sorted/ overlap/ have missing bins?
+    bin_labels = [
+        str(freq_bins[i]) + "-" + str(freq_bins[i + 1])
+        for i in range(len(freq_bins) - 1)
+    ]
+
+    # Initialize dictionaries to store results
+    average_results = {label: [] for label in bin_labels}
+    max_results = {label: [] for label in bin_labels}
+    median_results = {label: [] for label in bin_labels}
+    time_columns = []
+
+    for file_path in files:
+
+        average_results, max_results, median_results, time_columns = process_file(
+            file_path,
+            bin_labels,
+            freq_bins,
+            average_results,
+            max_results,
+            median_results,
+            time_columns,
+        )
+
+    # Create DataFrames from the results
+    average_df = pd.DataFrame(average_results, index=time_columns).sort_index()
+    max_df = pd.DataFrame(max_results, index=time_columns).sort_index()
+    median_df = pd.DataFrame(median_results, index=time_columns).sort_index()
+
+    average_df.index = average_df.index / 100.0
+    max_df.index = max_df.index / 100.0
+    median_df.index = median_df.index / 100.0
+
+    average_df.to_csv(os.path.join(output_dir, "average_results.csv"))
+    max_df.to_csv(os.path.join(output_dir, "max_results.csv"))
+    median_df.to_csv(os.path.join(output_dir, "median_results.csv"))
+
+    # Return the paths of the saved files
+    return (
+        os.path.join(output_dir, "average_results.csv"),
+        os.path.join(output_dir, "max_results.csv"),
+        os.path.join(output_dir, "median_results.csv"),
+    )
+
+
 # Function to interpolate and smooth the data using a moving average
 def smooth_data(df, window_size=6):
     return (
@@ -49,7 +106,7 @@ def smooth_data(df, window_size=6):
         .mean()
     )
 
+
 # Function to extract unique hour labels
 def extract_hour_labels(labels):
     return [str(label)[:2] for label in labels]
-

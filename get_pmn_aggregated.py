@@ -102,18 +102,18 @@ def process_files(files):
             time_columns,
         )
 
-        # Create DataFrames from the results
-        average_df = pd.DataFrame(average_results, index=time_columns).sort_index()
-        max_df = pd.DataFrame(max_results, index=time_columns).sort_index()
-        median_df = pd.DataFrame(median_results, index=time_columns).sort_index()
+    # Create DataFrames from the results
+    average_df = pd.DataFrame(average_results, index=time_columns).sort_index()
+    max_df = pd.DataFrame(max_results, index=time_columns).sort_index()
+    median_df = pd.DataFrame(median_results, index=time_columns).sort_index()
 
-        average_df.index = average_df.index / 100.0
-        max_df.index = max_df.index / 100.0
-        median_df.index = median_df.index / 100.0
+    average_df.index = average_df.index / 100.0
+    max_df.index = max_df.index / 100.0
+    median_df.index = median_df.index / 100.0
 
-        average_df.to_csv(os.path.join(drive, "average_results.csv"))
-        max_df.to_csv(os.path.join(drive, "max_results.csv"))
-        median_df.to_csv(os.path.join(drive, "median_results.csv"))
+    average_df.to_csv(os.path.join(drive, "average_results.csv"))
+    max_df.to_csv(os.path.join(drive, "max_results.csv"))
+    median_df.to_csv(os.path.join(drive, "median_results.csv"))
 
 
 process_files(files)
