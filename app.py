@@ -22,7 +22,7 @@ import subprocess
 ####################
 # Streamlit config
 if "NUM_FREQ_BINS" not in st.session_state:
-    st.session_state.NUM_FREQ_BINS = 1
+    st.session_state.NUM_FREQ_BINS = 5
 
 MAX_FREQ_BINS = 5
 
@@ -486,8 +486,27 @@ default_frequency_bins = [
     (20000, 60000),
 ]
 
+# Aggregate function selector
+agg_function = st.selectbox(
+    "Select the aggregation function",
+    [
+        "Mean",
+        "Median",
+        "Max",
+        # "Min",
+        # "Sum",
+        # "Standard Deviation",
+        # "Variance",
+        # "Count",
+        # "Percentile",
+        # "Custom?"
+    ],
+)
+
 for i in range(st.session_state.NUM_FREQ_BINS):
     with cols[0]:
+        min_value = 0 if i == 0 else st.session_state[f"max_freq_{i-1}"]
+
         min_freq = st.number_input(
             "Min frequency (Hz)",
             min_value=0,
@@ -496,9 +515,11 @@ for i in range(st.session_state.NUM_FREQ_BINS):
             key=f"min_freq_{i}",
         )
     with cols[1]:
+        min_value = st.session_state[f"min_freq_{i}"] + 1
+
         max_freq = st.number_input(
             "Max frequency (Hz)",
-            min_value=0,
+            min_value=min_value,
             value=default_frequency_bins[i][1],
             step=1,
             key=f"max_freq_{i}",
@@ -588,7 +609,7 @@ if st.button("Visualize", key="visualize_button"):
         selected_files = [Path(file) for file in selected_files]
     else:
         st.error("Please select a folder or files to proceed.")
-        st.stop()
+        st.stop()  # TODO: Instead of stopping, just return to the top of the page
 
     # Check if the user has selected any files
     if selected_files is not None:
@@ -637,23 +658,24 @@ if st.button("Visualize", key="visualize_button"):
         if not aggreated_dir.exists():
             aggreated_dir.mkdir(parents=True, exist_ok=True)
 
-            # TODO: SHOULD WE DELETE THE PREVIOUS FILES? OR CREATE NEW DIRECTORY EVERY TIME?
-            # Clear the output directory
-            for file in output_dir.glob("*"):
-                file.unlink()
+        # TODO: SHOULD WE DELETE THE PREVIOUS FILES? OR CREATE NEW DIRECTORY EVERY TIME?
+        # Clear the output directory
+        for file in output_dir.glob("*"):
+            file.unlink()
 
-            with st.spinner("Processing audio files..."):
-                res = subprocess.run(
-                    [
-                        "python",
-                        "prototype/prototype_calculate_PMN_for_dir.py",
-                        st.session_state.folder_path,
-                        str(output_dir),
-                    ]
-                )
-                if res.returncode != 0:
-                    st.error("Error processing audio files.")
-                    st.stop()
+        with st.spinner("Processing audio files..."):
+            res = subprocess.run(
+                [
+                    "python",
+                    "prototype/prototype_calculate_PMN_for_dir.py",
+                    st.session_state.folder_path,
+                    str(output_dir),
+                ]
+            )
+            if res.returncode != 0:
+                st.error("Error processing audio files.")
+                st.stop()  # TODO: Instead of stopping, just return to the top of the page
+            st.success("Audio files processed successfully.")
 
         with st.spinner("Aggregating the PMN results..."):
             # Aggregate the PMN results
@@ -678,8 +700,17 @@ if st.button("Visualize", key="visualize_button"):
         if csv_upload is not None:
             display_csv_file = csv_upload
         else:
-            display_csv_file = avg_csv
-            # TODO: Add a SELECTOR to change which aggregate you want
+            if agg_function == "Mean":
+                display_csv_file = avg_csv
+            elif agg_function == "Max":
+                display_csv_file = max_csv
+            elif agg_function == "Median":
+                display_csv_file = median_csv
+
+    else:
+        st.error("No files selected.")
+        st.stop()
+        # TODO: Instead of stopping, just return to the top of the page
 
     if use_plotly:
         plots = plot_file(display_csv_file, sunrise_sunset_data, use_plotly=True)
