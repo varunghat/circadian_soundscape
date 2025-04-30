@@ -7,20 +7,17 @@ import numpy as np
 from .process import smooth_data
 
 
-
-#  TODO: generalize this
-colors = ["blue", "green", "orange", "red", "purple"]
-# Define frequency bins
-bins = [0, 1500, 5000, 10000, 20000, 60000]
-bin_labels = ["0-1500", "1500-5000", "5000-10000", "10k-20000", "20k-60000"]
-# Initialize dictionaries to store results
-average_results = {label: [] for label in bin_labels}
-max_results = {label: [] for label in bin_labels}
-median_results = {label: [] for label in bin_labels}
-time_columns = []
-
 # Plotting the results
-def plot_results_line(df, title, day, save=False, save_path="", std=None):
+def plot_results_line(
+    df,
+    title,
+    day,
+    save=False,
+    save_path="",
+    std=None,
+    colors=None,
+    icons=None,
+):
 
     df = smooth_data(df)  # Smooth the data
     fig = plt.figure(figsize=(12, 8))
@@ -47,7 +44,10 @@ def plot_results_line(df, title, day, save=False, save_path="", std=None):
     fig = plt.gcf()
     return fig
 
-def plot_results_line_plotly(df, title, day, save=False, save_path="", std=None):
+
+def plot_results_line_plotly(
+    df, title, day, save=False, save_path="", std=None, colors=None, icons=None
+):
 
     df = smooth_data(df)  # Smooth the data
 
@@ -56,25 +56,29 @@ def plot_results_line_plotly(df, title, day, save=False, save_path="", std=None)
     for idx, col in enumerate(df.columns):
         color = colors[idx % len(colors)]
 
-        fig.add_trace(go.Scatter(
-            x=df.index,
-            y=df[col],
-            mode='lines',
-            name=col,
-            line=dict(color=color),
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df[col],
+                mode="lines",
+                name=col,
+                line=dict(color=color),
+            )
+        )
 
         if std is not None:
-            fig.add_trace(go.Scatter(
-                x=np.concatenate([df.index, df.index[::-1]]),
-                y=np.concatenate([df[col] - std[col], (df[col] + std[col])[::-1]]),
-                fill='toself',
-                fillcolor=color,
-                opacity=0.2,
-                line=dict(color='rgba(255,255,255,0)'),
-                hoverinfo="skip",
-                showlegend=False,
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=np.concatenate([df.index, df.index[::-1]]),
+                    y=np.concatenate([df[col] - std[col], (df[col] + std[col])[::-1]]),
+                    fill="toself",
+                    fillcolor=color,
+                    opacity=0.2,
+                    line=dict(color="rgba(255,255,255,0)"),
+                    hoverinfo="skip",
+                    showlegend=False,
+                )
+            )
 
     fig.update_layout(
         title=f"{title} - {day}",
@@ -89,9 +93,9 @@ def plot_results_line_plotly(df, title, day, save=False, save_path="", std=None)
 
     # Set x-ticks (every 2 hours)
     fig.update_xaxes(
-        tickmode='array',
+        tickmode="array",
         tickvals=np.arange(0, 25, 2),
-        ticktext=[f"{int(hour)}:00" for hour in np.arange(0, 25, 2)]
+        ticktext=[f"{int(hour)}:00" for hour in np.arange(0, 25, 2)],
     )
 
     if save:
@@ -99,8 +103,11 @@ def plot_results_line_plotly(df, title, day, save=False, save_path="", std=None)
 
     return fig
 
+
 # Plotting the results
-def plot_results_polar(df, title, day, save=False, save_path=""):
+def plot_results_polar(
+    df, title, day, save=False, save_path="", colors=None, icons=None
+):
     df = smooth_data(df)  # Smooth the data
 
     r_max_list = []
@@ -141,7 +148,9 @@ def plot_results_polar(df, title, day, save=False, save_path=""):
     return fig
 
 
-def plot_results_polar_plotly(df, title, day, save=False, save_path=""):
+def plot_results_polar_plotly(
+    df, title, day, save=False, save_path="", colors=None, icons=None
+):
     df = smooth_data(df)  # Smooth the data
 
     fig = go.Figure()
@@ -151,13 +160,15 @@ def plot_results_polar_plotly(df, title, day, save=False, save_path=""):
         theta = np.linspace(0, 360, len(r))  # Degrees
         color = colors[idx % len(colors)]
 
-        fig.add_trace(go.Scatterpolar(
-            r=r,
-            theta=theta,
-            mode='lines',
-            name=col,
-            line=dict(color=color),
-        ))
+        fig.add_trace(
+            go.Scatterpolar(
+                r=r,
+                theta=theta,
+                mode="lines",
+                name=col,
+                line=dict(color=color),
+            )
+        )
 
     # Calculate rmax for nice scaling
     r_max = df.max().max()
@@ -170,7 +181,7 @@ def plot_results_polar_plotly(df, title, day, save=False, save_path=""):
                 tickvals=[-r_max, 0, r_max],
             ),
             angularaxis=dict(
-                tickmode='array',
+                tickmode="array",
                 tickvals=np.linspace(0, 330, 12),  # Every 30 degrees
                 ticktext=[f"{i}:00" for i in range(0, 24, 2)],  # Label every 2 hours
                 direction="clockwise",
@@ -191,7 +202,9 @@ def plot_results_polar_plotly(df, title, day, save=False, save_path=""):
 
 
 # Plotting individual bins
-def plot_individual_bins_line(df, title, day, save=False, save_path="", std=None):
+def plot_individual_bins_line(
+    df, title, day, save=False, save_path="", std=None, colors=None, icons=None
+):
     df = smooth_data(df)  # Smooth the data
     figs = []
     for col, color in zip(df.columns, colors):
@@ -222,7 +235,9 @@ def plot_individual_bins_line(df, title, day, save=False, save_path="", std=None
     return figs
 
 
-def plot_individual_bins_line_plotly(df, title, day, save=False, save_path="", std=None):
+def plot_individual_bins_line_plotly(
+    df, title, day, save=False, save_path="", std=None, colors=None, icons=None
+):
     df = smooth_data(df)  # Smooth the data
     figs = []
 
@@ -232,26 +247,30 @@ def plot_individual_bins_line_plotly(df, title, day, save=False, save_path="", s
         fig = go.Figure()
 
         # Plot the main line
-        fig.add_trace(go.Scatter(
-            x=df.index,
-            y=df[col],
-            mode='lines',
-            name=col,
-            line=dict(color=color),
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df[col],
+                mode="lines",
+                name=col,
+                line=dict(color=color),
+            )
+        )
 
         # Plot the standard deviation area if available
         if std is not None:
-            fig.add_trace(go.Scatter(
-                x=np.concatenate([df.index, df.index[::-1]]),
-                y=np.concatenate([df[col] - std[col], (df[col] + std[col])[::-1]]),
-                fill='toself',
-                fillcolor=color,
-                opacity=0.2,
-                line=dict(color='rgba(255,255,255,0)'),  # Invisible border
-                hoverinfo="skip",
-                showlegend=False,
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=np.concatenate([df.index, df.index[::-1]]),
+                    y=np.concatenate([df[col] - std[col], (df[col] + std[col])[::-1]]),
+                    fill="toself",
+                    fillcolor=color,
+                    opacity=0.2,
+                    line=dict(color="rgba(255,255,255,0)"),  # Invisible border
+                    hoverinfo="skip",
+                    showlegend=False,
+                )
+            )
 
         # Configure layout
         fig.update_layout(
@@ -267,9 +286,9 @@ def plot_individual_bins_line_plotly(df, title, day, save=False, save_path="", s
 
         # Set x-ticks to every 2 hours
         fig.update_xaxes(
-            tickmode='array',
+            tickmode="array",
             tickvals=np.arange(0, 25, 2),
-            ticktext=[f"{int(hour)}:00" for hour in np.arange(0, 25, 2)]
+            ticktext=[f"{int(hour)}:00" for hour in np.arange(0, 25, 2)],
         )
 
         # Save figure if requested
@@ -283,9 +302,9 @@ def plot_individual_bins_line_plotly(df, title, day, save=False, save_path="", s
     return figs
 
 
-
-
-def plot_individual_bins_polar(df, title, day, save=False, save_path=""):
+def plot_individual_bins_polar(
+    df, title, day, save=False, save_path="", colors=None, icons=None
+):
     df = smooth_data(df)  # Smooth the data
     figs = []
     for col, color in zip(df.columns, colors):
@@ -329,10 +348,11 @@ def plot_individual_bins_polar(df, title, day, save=False, save_path=""):
     return figs
 
 
-def plot_individual_bins_polar_plotly(df, title, day, save=False, save_path=""):
+def plot_individual_bins_polar_plotly(
+    df, title, day, save=False, save_path="", colors=None, icons=None
+):
     df = smooth_data(df)  # Smooth the data
     figs = []
-
 
     for idx, col in enumerate(df.columns):
         r = df[col]
@@ -341,13 +361,15 @@ def plot_individual_bins_polar_plotly(df, title, day, save=False, save_path=""):
 
         fig = go.Figure()
 
-        fig.add_trace(go.Scatterpolar(
-            r=r,
-            theta=theta,
-            mode='lines',
-            name=col,
-            line=dict(color=color),
-        ))
+        fig.add_trace(
+            go.Scatterpolar(
+                r=r,
+                theta=theta,
+                mode="lines",
+                name=col,
+                line=dict(color=color),
+            )
+        )
 
         r_max = r.max()
 
@@ -359,7 +381,7 @@ def plot_individual_bins_polar_plotly(df, title, day, save=False, save_path=""):
                     tickvals=[-r_max, 0, r_max],
                 ),
                 angularaxis=dict(
-                    tickmode='array',
+                    tickmode="array",
                     tickvals=np.linspace(0, 345, 24),  # 24 ticks for 24 hours
                     ticktext=[f"{i}:00" for i in range(24)],
                     direction="clockwise",
@@ -383,7 +405,16 @@ def plot_individual_bins_polar_plotly(df, title, day, save=False, save_path=""):
     return figs
 
 
-def plot_results_color(df, title, day, selection=[0, 1, 2], save=False, save_path=""):
+def plot_results_color(
+    df,
+    title,
+    day,
+    selection=[0, 1, 2],
+    save=False,
+    save_path="",
+    colors=None,
+    icons=None,
+):
     all_frequency_columns = [col for col in df.columns]
     # print(all_frequency_columns)
     selected_columns = [all_frequency_columns[s] for s in selection]
@@ -430,7 +461,17 @@ def plot_results_color(df, title, day, selection=[0, 1, 2], save=False, save_pat
     fig = plt.gcf()
     return fig
 
-def plot_results_color_plotly(df, title, day, selection=[0, 1, 2], save=False, save_path=""):
+
+def plot_results_color_plotly(
+    df,
+    title,
+    day,
+    selection=[0, 1, 2],
+    save=False,
+    save_path="",
+    colors=None,
+    icons=None,
+):
     all_frequency_columns = [col for col in df.columns]
     selected_columns = [all_frequency_columns[s] for s in selection]
     df2 = df.copy()
@@ -443,23 +484,28 @@ def plot_results_color_plotly(df, title, day, selection=[0, 1, 2], save=False, s
     df2["b"] = df2[selected_columns[2]] / df2["sum"]
 
     # Create color strings for Plotly (must be in "rgb(r,g,b)" format 0-255)
-    df2["color"] = df2.apply(lambda row: f'rgb({int(row["r"]*255)}, {int(row["g"]*255)}, {int(row["b"]*255)})', axis=1)
+    df2["color"] = df2.apply(
+        lambda row: f'rgb({int(row["r"]*255)}, {int(row["g"]*255)}, {int(row["b"]*255)})',
+        axis=1,
+    )
 
     fig = go.Figure()
 
-    fig.add_trace(go.Bar(
-        x=np.arange(len(df2)),
-        y=df2["sum"],
-        marker_color=df2["color"],
-        marker_line_width=0,
-        width=1.1,
-        hoverinfo='x+y',
-        name='Power-Minus-Noise',
-        showlegend=False,
-    ))
+    fig.add_trace(
+        go.Bar(
+            x=np.arange(len(df2)),
+            y=df2["sum"],
+            marker_color=df2["color"],
+            marker_line_width=0,
+            width=1.1,
+            hoverinfo="x+y",
+            name="Power-Minus-Noise",
+            showlegend=False,
+        )
+    )
 
     # Set up x-ticks every hour
-    tickvals = np.linspace(0, len(df2)-1, 24).astype(int)
+    tickvals = np.linspace(0, len(df2) - 1, 24).astype(int)
     ticktext = [f"{hour}:00" for hour in range(24)]
 
     fig.update_layout(
@@ -469,7 +515,7 @@ def plot_results_color_plotly(df, title, day, selection=[0, 1, 2], save=False, s
         width=1200,
         height=600,
         xaxis=dict(
-            tickmode='array',
+            tickmode="array",
             tickvals=tickvals,
             ticktext=ticktext,
         ),
@@ -478,27 +524,36 @@ def plot_results_color_plotly(df, title, day, selection=[0, 1, 2], save=False, s
     )
 
     # Add a manual color legend (simulate using colored markers)
-    fig.add_trace(go.Scatter(
-        x=[None], y=[None],
-        mode='markers',
-        marker=dict(size=10, color='red',line=dict(width=0)),
-        marker_line_width=0,
-        name=selected_columns[0]
-    ))
-    fig.add_trace(go.Scatter(
-        x=[None], y=[None],
-        mode='markers',
-        marker=dict(size=10, color='green',line=dict(width=0)),
-        marker_line_width=0,
-        name=selected_columns[1]
-    ))
-    fig.add_trace(go.Scatter(
-        x=[None], y=[None],
-        mode='markers',
-        marker=dict(size=10, color='blue',line=dict(width=0)),
-        marker_line_width=0,
-        name=selected_columns[2]
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=[None],
+            y=[None],
+            mode="markers",
+            marker=dict(size=10, color="red", line=dict(width=0)),
+            marker_line_width=0,
+            name=selected_columns[0],
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=[None],
+            y=[None],
+            mode="markers",
+            marker=dict(size=10, color="green", line=dict(width=0)),
+            marker_line_width=0,
+            name=selected_columns[1],
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=[None],
+            y=[None],
+            mode="markers",
+            marker=dict(size=10, color="blue", line=dict(width=0)),
+            marker_line_width=0,
+            name=selected_columns[2],
+        )
+    )
 
     if save:
         fig.write_image(f"{save_path}{title.replace(' ', '_')}_{day}.png")
@@ -510,7 +565,14 @@ def plot_results_color_plotly(df, title, day, selection=[0, 1, 2], save=False, s
 
 
 def plot_results_color_polar(
-    df, title, day, selection=[0, 1, 2], save=False, save_path=""
+    df,
+    title,
+    day,
+    selection=[0, 1, 2],
+    save=False,
+    save_path="",
+    colors=None,
+    icons=None,
 ):
 
     theta = np.linspace(0, 2 * np.pi, len(df))
@@ -570,7 +632,16 @@ def plot_results_color_polar(
     return fig
 
 
-def plot_results_color_polar_plotly(df, title, day, selection=[0, 1, 2], save=False, save_path=""):
+def plot_results_color_polar_plotly(
+    df,
+    title,
+    day,
+    selection=[0, 1, 2],
+    save=False,
+    save_path="",
+    colors=None,
+    icons=None,
+):
     # Prepare theta in degrees for Plotly
     theta = np.linspace(0, 360, len(df))  # Plotly expects degrees, not radians
 
@@ -585,22 +656,25 @@ def plot_results_color_polar_plotly(df, title, day, selection=[0, 1, 2], save=Fa
     df2["b"] = df2[selected_columns[2]] / df2["sum"]
 
     # Create color strings for Plotly
-    df2["color"] = df2.apply(lambda row: f'rgb({int(row["r"]*255)}, {int(row["g"]*255)}, {int(row["b"]*255)})', axis=1)
+    df2["color"] = df2.apply(
+        lambda row: f'rgb({int(row["r"]*255)}, {int(row["g"]*255)}, {int(row["b"]*255)})',
+        axis=1,
+    )
 
     fig = go.Figure()
 
-    fig.add_trace(go.Barpolar(
-        r=df2["sum"],
-        theta=theta,
-        width=[360/len(df2)]*len(df2),  # Equal width for each bar (fills full circle)
-        marker=dict(
-            color=df2["color"],
-            line=dict(width=0)  # No white border
-        ),
-        opacity=1,
-        hoverinfo='theta+r',
-        showlegend=False
-    ))
+    fig.add_trace(
+        go.Barpolar(
+            r=df2["sum"],
+            theta=theta,
+            width=[360 / len(df2)]
+            * len(df2),  # Equal width for each bar (fills full circle)
+            marker=dict(color=df2["color"], line=dict(width=0)),  # No white border
+            opacity=1,
+            hoverinfo="theta+r",
+            showlegend=False,
+        )
+    )
 
     r_max = df2["sum"].max()
 
@@ -614,7 +688,7 @@ def plot_results_color_polar_plotly(df, title, day, selection=[0, 1, 2], save=Fa
             ),
             angularaxis=dict(
                 direction="clockwise",
-                tickmode='array',
+                tickmode="array",
                 tickvals=np.linspace(0, 345, 24),  # 24 ticks, one for each hour
                 ticktext=[f"{i}:00" for i in range(24)],
             ),
@@ -626,24 +700,33 @@ def plot_results_color_polar_plotly(df, title, day, selection=[0, 1, 2], save=Fa
     )
 
     # Add a manual color legend
-    fig.add_trace(go.Scatterpolar(
-        r=[None], theta=[None],
-        mode='markers',
-        marker=dict(size=10, color='red'),
-        name=selected_columns[0]
-    ))
-    fig.add_trace(go.Scatterpolar(
-        r=[None], theta=[None],
-        mode='markers',
-        marker=dict(size=10, color='green'),
-        name=selected_columns[1]
-    ))
-    fig.add_trace(go.Scatterpolar(
-        r=[None], theta=[None],
-        mode='markers',
-        marker=dict(size=10, color='blue'),
-        name=selected_columns[2]
-    ))
+    fig.add_trace(
+        go.Scatterpolar(
+            r=[None],
+            theta=[None],
+            mode="markers",
+            marker=dict(size=10, color="red"),
+            name=selected_columns[0],
+        )
+    )
+    fig.add_trace(
+        go.Scatterpolar(
+            r=[None],
+            theta=[None],
+            mode="markers",
+            marker=dict(size=10, color="green"),
+            name=selected_columns[1],
+        )
+    )
+    fig.add_trace(
+        go.Scatterpolar(
+            r=[None],
+            theta=[None],
+            mode="markers",
+            marker=dict(size=10, color="blue"),
+            name=selected_columns[2],
+        )
+    )
 
     if save:
         fig.write_image(f"{save_path}{title.replace(' ', '_')}_{day}.png")
