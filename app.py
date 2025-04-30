@@ -82,13 +82,23 @@ def select_files():
     return file_paths
 
 
-def plot_file(file_path, sunrise_sunset_data, use_plotly=True):
+def plot_file(
+    file_path,
+    sunrise_sunset_data,
+    use_plotly=True,
+    colors=None,
+    icons=None,
+    bin_labels=None,
+):
     """
     Function to plot the results from the PMN CSV file
     Args:
         file_path (str): Path to the PMN CSV file
         sunrise_sunset_data (dict): Dictionary containing the sunrise, sunset and solar noon times for each date
         use_plotly (bool): Whether to use plotly for plotting or not (will use matplotlib if False)
+        colors (list): List of colors to be used for the plots
+        icons (list): List of icons to be used for the plots
+        bin_labels (list): List of frequency bins to be used for the plots
     Returns:
         fig1 : Line plot of the PMN data
         fig2 : Polar plot of the PMN data
@@ -108,11 +118,37 @@ def plot_file(file_path, sunrise_sunset_data, use_plotly=True):
 
     if use_plotly:
 
-        fig1 = plot.plot_results_line_plotly(df, "Power-Minus-Noise", "-", save=False)
-        fig2 = plot.plot_results_polar_plotly(df, "Power-Minus-Noise", "-", save=False)
-        fig3 = plot.plot_results_color_plotly(df, "Power-Minus-Noise", "-", save=False)
+        fig1 = plot.plot_results_line_plotly(
+            df,
+            "Power-Minus-Noise",
+            "-",
+            save=False,
+            colors=colors,
+            # icons=icons,
+        )
+        fig2 = plot.plot_results_polar_plotly(
+            df,
+            "Power-Minus-Noise",
+            "-",
+            save=False,
+            colors=colors,
+            # icons=icons,
+        )
+        fig3 = plot.plot_results_color_plotly(
+            df,
+            "Power-Minus-Noise",
+            "-",
+            save=False,
+            colors=colors,
+            # icons=icons,
+        )
         fig4 = plot.plot_results_color_polar_plotly(
-            df, "Power-Minus-Noise", "-", save=False
+            df,
+            "Power-Minus-Noise",
+            "-",
+            save=False,
+            colors=colors,
+            # icons=icons,
         )
 
         # Add the sunrise, sunset and solar noon times to the plots if available only to the circular plots (polar and color polar)
@@ -745,11 +781,23 @@ if st.button("Visualize", key="visualize_button"):
         # TODO: Instead of stopping, just return to the top of the page
 
     if use_plotly:
-        plots = plot_file(display_csv_file, sunrise_sunset_data, use_plotly=True)
+        plots = plot_file(
+            display_csv_file,
+            sunrise_sunset_data,
+            use_plotly=True,
+            colors=colors,
+            icons=icons,
+        )
         for fig in plots:
             st.plotly_chart(fig, use_container_width=True)
 
     else:
-        plots = plot_file(display_csv_file, sunrise_sunset_data, use_plotly=False)
+        plots = plot_file(
+            display_csv_file,
+            sunrise_sunset_data,
+            use_plotly=False,
+            colors=colors,
+            icons=icons,
+        )
         for fig in plots:
             st.pyplot(fig)
