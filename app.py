@@ -726,9 +726,7 @@ if st.button("Visualize", key="visualize_button"):
                 files=files,
                 output_dir=aggreated_dir,
                 freq_bins=freq_bins,
-                colors=colors,
-                icons=icons,  # TODO: Unused currently
-                offset=offset,  # TODO: Unused currently
+                offset=offset,
             )
         display_csv_file = None
         if csv_upload is not None:
