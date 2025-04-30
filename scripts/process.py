@@ -45,13 +45,7 @@ def process_file(
     return average_results, max_results, median_results, time_columns
 
 
-# Define frequency bins
-bins = [0, 1500, 5000, 10000, 20000, 60000]
-bin_labels = ["0-1500", "1500-5000", "5000-10000", "10k-20000", "20k-60000"]
-colors = ["blue", "green", "orange", "red", "purple"]
-
-
-def process_files(files, output_dir, freq_bins, colors, icons, offset):
+def process_files(files, output_dir, freq_bins, offset=0):
 
     # Calculate bin labels using the bins TODO: Would this work if bins are not sorted/ overlap/ have missing bins?
     bin_labels = [
@@ -85,6 +79,16 @@ def process_files(files, output_dir, freq_bins, colors, icons, offset):
     average_df.index = average_df.index / 100.0
     max_df.index = max_df.index / 100.0
     median_df.index = median_df.index / 100.0
+
+    # Add the time offset to the time columns and mod 24 to wrap around
+    average_df.index = (average_df.index + offset) % 24
+    max_df.index = (max_df.index + offset) % 24
+    median_df.index = (median_df.index + offset) % 24
+
+    # Sort the DataFrames by index
+    average_df = average_df.sort_index()
+    max_df = max_df.sort_index()
+    median_df = median_df.sort_index()
 
     average_df.to_csv(os.path.join(output_dir, "average_results.csv"))
     max_df.to_csv(os.path.join(output_dir, "max_results.csv"))
