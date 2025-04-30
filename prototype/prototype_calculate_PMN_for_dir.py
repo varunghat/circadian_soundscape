@@ -219,7 +219,7 @@ def calculate_PMN(sound_segment):
     return df
 
 
-def calculate_PMN_for_file(filepath):
+def calculate_PMN_for_file(filepath, save=False, output_dir=None):
     sampling_rate, data = wavfile.read(
         filepath
     )  # Placeholder for extracting 'from' and 'to'
@@ -231,6 +231,15 @@ def calculate_PMN_for_file(filepath):
         df = calculate_PMN(sound_segment)
         list_df.append(df)
     df_output = pd.concat(list_df)
+    if save:
+        if output_dir is None:
+            output_dir = os.path.join(os.path.dirname(filepath), "output")
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        filename = os.path.splitext(os.path.basename(filepath))[0]
+        filename_output = f"{filename}.csv"
+        df_output.to_csv(os.path.join(output_dir, filename_output))
+        print(f"{filename_output} exported to {output_dir}")
     return df_output
 
 
@@ -259,28 +268,89 @@ parser = argparse.ArgumentParser(
     description="Calculate PMN for .wav files in a directory."
 )
 parser.add_argument(
-    "dir_input",
+    "--dir_input",
     type=str,
     help="Directory containing .wav files to process.",
 )
 parser.add_argument(
-    "dir_output",
+    "--file_input",
     type=str,
-    help="Directory to save the output .csv files.",
+    help="File containing .wav files to process.",
 )
 
+parser.add_argument(
+    "--file_list",
+    type=str,
+    help="File containing a list of .wav files to process.",
+)
+
+parser.add_argument(
+    "--dir_output",
+    type=str,
+    help="Directory to save the output .csv files. If not provided, it will be created in the input directory.",
+)
+
+
 args = parser.parse_args()
-dir_input = args.dir_input
+dir_input = None
+file_input = None
+file_list = None
+
 dir_output = args.dir_output
 
-if not os.path.exists(dir_output):
-    os.makedirs(dir_output)
 
-if not os.path.exists(dir_input):
-    raise FileNotFoundError(f"Input directory {dir_input} does not exist.")
+if args.dir_input:
+    if args.file_input or args.file_list:
+        raise ValueError(
+            "Please provide only one of --dir_input, --file_input, or --file_list argument."
+        )
 
+    dir_input = args.dir_input
+    if dir_output is None:
+        dir_output = os.path.join(dir_input, "output")
+    if not os.path.exists(dir_output):
+        os.makedirs(dir_output)
 
-calculate_PMN_for_dir(dir_input, dir_output)
+    calculate_PMN_for_dir(dir_input, dir_output)
+elif args.file_input:
+    if args.dir_input or args.file_list:
+        raise ValueError(
+            "Please provide only one of --dir_input, --file_input, or --file_list argument."
+        )
+    if not os.path.exists(args.file_input):
+        raise ValueError(f"File {args.file_input} does not exist.")
+    if not args.file_input.endswith(".WAV"):
+        raise ValueError(f"File {args.file_input} is not a .WAV file.")
+
+    file_input = args.file_input
+    if dir_output is None:
+        dir_output = os.path.join(file_input, "output")
+    if not os.path.exists(dir_output):
+        os.makedirs(dir_output)
+
+    calculate_PMN_for_file(file_input, save=True, output_dir=dir_output)
+
+elif args.file_list:
+    if args.dir_input or args.file_input:
+        raise ValueError(
+            "Please provide only one of --dir_input, --file_input, or --file_list argument."
+        )
+    if not os.path.exists(args.file_list):
+        raise ValueError(f"File {args.file_list} does not exist.")
+
+    with open(args.file_list, "r") as f:
+        file_list = f.readlines()
+    file_list = [x.strip() for x in file_list]
+
+    if dir_output is None:
+        dir_output = os.path.join(os.path.dirname(file_list[0]), "output")
+    if not os.path.exists(dir_output):
+        os.makedirs(dir_output)
+
+    for file in tqdm(file_list):
+        calculate_PMN_for_file(file, save=True, output_dir=dir_output)
+else:
+    raise ValueError("Please provide either --dir_input or --file_input argument.")
 
 
 # %%

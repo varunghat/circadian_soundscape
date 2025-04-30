@@ -15,6 +15,7 @@ from tkinter import filedialog
 from scripts import process
 from scripts import plot
 from scripts.utils import get_sunrise_sunset
+from tqdm import tqdm
 
 import subprocess
 
@@ -584,6 +585,12 @@ if sunrise_sunset:
     except ValueError:
         st.error("Please enter **valid** latitude and longitude.")
 
+force_reprocess_files = st.checkbox(
+    "Force reprocess files (if already processed) :repeat:",
+    value=False,
+    help="If checked, all files will be reprocessed, even if they have already been processed (PMN calculated).",
+)
+
 
 # Add a way to upload csv files
 csv_upload = st.file_uploader(
@@ -650,32 +657,59 @@ if st.button("Visualize", key="visualize_button"):
             scratch_dir.mkdir(parents=True, exist_ok=True)
 
         # Create the output directory if it doesn't exist
-        output_dir = Path("scratch/pmn_results")
-        if not output_dir.exists():
-            output_dir.mkdir(parents=True, exist_ok=True)
+        pmn_output_dir = Path("scratch/pmn_results")
+        if not pmn_output_dir.exists():
+            pmn_output_dir.mkdir(parents=True, exist_ok=True)
 
         aggreated_dir = Path("scratch/aggregated_results")
         if not aggreated_dir.exists():
             aggreated_dir.mkdir(parents=True, exist_ok=True)
 
         # TODO: SHOULD WE DELETE THE PREVIOUS FILES? OR CREATE NEW DIRECTORY EVERY TIME?
-        # Clear the output directory
-        for file in output_dir.glob("*"):
-            file.unlink()
+        existing_pmn_files = list(pmn_output_dir.glob("*.csv"))
 
-        with st.spinner("Processing audio files..."):
-            res = subprocess.run(
-                [
-                    "python",
-                    "prototype/prototype_calculate_PMN_for_dir.py",
-                    st.session_state.folder_path,
-                    str(output_dir),
-                ]
-            )
-            if res.returncode != 0:
-                st.error("Error processing audio files.")
-                st.stop()  # TODO: Instead of stopping, just return to the top of the page
-            st.success("Audio files processed successfully.")
+        if force_reprocess_files:
+            # Delete the existing PMN files if the user wants to reprocess the files
+            selected_files_unprocessed = selected_files
+
+        else:
+
+            selected_files_unprocessed = [
+                file
+                for file in selected_files
+                if file.stem not in [f.stem for f in existing_pmn_files]
+            ]
+
+            # Check if the files have already been processed
+            if len(selected_files_unprocessed) == 0:
+                st.warning("All files have already been processed.")
+            else:
+                st.write(
+                    f"Processing {len(selected_files_unprocessed)} files out of {len(selected_files)}..."
+                )
+
+                with st.spinner("Processing audio files..."):
+                    # Create a temporary text document with the selected files
+                    temp_file_path = scratch_dir / "selected_files.txt"
+                    with open(temp_file_path, "w") as f:
+                        for file in selected_files_unprocessed:
+                            f.write(str(file) + "\n")
+
+                    # Process one file at a time
+                    res = subprocess.run(
+                        [
+                            "python",
+                            "prototype/prototype_calculate_PMN_for_dir.py",
+                            "--file_list",
+                            temp_file_path,
+                            "--dir_output",
+                            str(pmn_output_dir),
+                        ]
+                    )
+                    if res.returncode != 0:
+                        st.error("Error processing the audio files.")
+                        st.stop()
+                    st.success("Audio files processed successfully.")
 
         with st.spinner("Aggregating the PMN results..."):
             # Aggregate the PMN results
@@ -685,7 +719,7 @@ if st.button("Visualize", key="visualize_button"):
             ]  # Flatten the list of tuples
 
             files = [
-                str(file) for file in output_dir.glob("*.csv")
+                str(file) for file in pmn_output_dir.glob("*.csv")
             ]  # TODO: Check if this works with the new directory structure
 
             avg_csv, max_csv, median_csv = process.process_files(
