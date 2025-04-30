@@ -2,6 +2,23 @@
 
 This readme file was created by Confused_scientists for the AI+Environment Hackathon 2024
 
+# INSTRUCTIONS TO RUN THE CODE
+
+Windows:
+
+1. Double-click start_app.bat
+   OR
+1. Open command prompt
+1. Navigate to the folder where the script is located
+1. Run: start_app.bat
+
+Mac/Linux:
+
+1. Open terminal
+2. Navigate to the folder
+3. Run: chmod +x start_app.sh
+4. Run: ./start_app.sh
+
 # HOW TO RUN STREAMLIT
 
 1. Install streamlit by running `pip install streamlit`
