@@ -258,33 +258,28 @@ def calculate_PMN(sound_segment):
     raw_spectro = calculate_spectrogram_amplitude(
         sound_segment, wl=wl, overlap=overlap, sampling_rate=44100
     )
-    print("Step1")
     # Step 2: Smooth noise profile
     raw_spectro_roll = smooth_noise_profile(
         raw_spectro, window_size=3, threshold=threshold
     )
-    print("Step2")
 
     # print("Raw spectrogram roll shape:", raw_spectro_roll.shape)
     # print("Raw spectrogram roll:", raw_spectro_roll)
 
     # Step 3: Calculate mode
     spectro_mode = dB_mode_per_row(raw_spectro_roll, window_size=5)
-    print("Step3")
 
     # print("Spectrogram mode shape:", spectro_mode.shape)
     # print("Spectrogram mode:", spectro_mode)
 
     # Step 4:  Smooth the mode
     spectro_mode = roll_meandB_vector(spectro_mode, window_size=5)
-    print("Step4")
 
     # print("Spectrogram mode smoothed shape:", spectro_mode.shape)
     # print("Spectrogram mode smoothed:", spectro_mode)
 
     # Step 5: Subtract background noise
     spectro_less_mode = subtract_background_noise(raw_spectro, spectro_mode)
-    print("Step5")
 
     # print("Spectrogram less mode shape:", spectro_less_mode.shape)
     # print("Spectrogram less mode:", spectro_less_mode)
@@ -296,14 +291,12 @@ def calculate_PMN(sound_segment):
         window_col_size=3,
         threshold=neighborhood_threshold,
     )
-    print("Step6")
 
     # print("ALE matrix shape:", ale_matrix.shape)
     # print("ALE matrix:", ale_matrix)
 
     # Step 7: Calculate PMN
     PMN = calculate_PMN_from_matrix(ale_matrix)
-    print("Step7")
 
     # print("PMN shape:", PMN.shape)
     # print("PMN:", PMN)

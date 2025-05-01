@@ -32,9 +32,9 @@ def process_file(
     df["Frequency Bin"] = pd.cut(df["Frequency"], bins, labels=bin_labels)
 
     # Group by 'Frequency Bin' and aggregate 'PMN' values
-    avg_agg = df.groupby("Frequency Bin")["PMN"].mean()
-    max_agg = df.groupby("Frequency Bin")["PMN"].max()
-    median_agg = df.groupby("Frequency Bin")["PMN"].median()
+    avg_agg = df.groupby("Frequency Bin", observed=False)["PMN"].mean()
+    max_agg = df.groupby("Frequency Bin", observed=False)["PMN"].max()
+    median_agg = df.groupby("Frequency Bin", observed=False)["PMN"].median()
 
     # Store the results
     for label in bin_labels:
