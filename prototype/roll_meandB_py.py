@@ -190,38 +190,32 @@ def roll_meandB_threshold(x, windowRowSize=9, windowColSize=3, threshold=3):
 
 
 def roll_meandB_threshold_efficient(x, windowRowSize=9, windowColSize=3, threshold=3.0):
-
     x = np.asarray(x, dtype=np.float64)
 
-    # Pad with zeros manually (like your original code)
+    # Padding
     row_pad = (windowRowSize - 1) // 2
     col_pad = (windowColSize - 1) // 2
-
     x_padded = np.pad(
-        x,
-        pad_width=((row_pad, row_pad), (col_pad, col_pad)),
-        mode="constant",
-        constant_values=0,
+        x, ((row_pad, row_pad), (col_pad, col_pad)), mode="constant", constant_values=0
     )
 
-    # Create sliding window views
+    # Sliding window view
     windows = sliding_window_view(x_padded, (windowRowSize, windowColSize))
+    win_shape = windows.shape
+    num_windows = win_shape[0] * win_shape[1]
+    flat_windows = windows.reshape(num_windows, -1)
 
-    # Shape: (rows, cols, windowRowSize, windowColSize)
-    rows, cols = windows.shape[:2]
-    out = np.empty((rows, cols))
+    # Compute linear mean and dB
+    lin_vals = np.power(10, flat_windows / 10.0)
+    mean_lin = lin_vals.mean(axis=1)
+    mean_db = 10 * np.log10(mean_lin + 1e-10)
 
-    for i in range(rows):
-        for j in range(cols):
-            window = windows[i, j]
+    # Compute min of each window
+    min_vals = flat_windows.min(axis=1)
 
-            lin_vals = np.power(10, window / 10.0)
-            mean_lin = np.mean(lin_vals)
-            mean_db = 10 * np.log10(mean_lin)
+    # Use center value from original x
+    center_vals = x.flatten()
+    out_flat = np.where(mean_db > threshold, center_vals, min_vals)
 
-            if mean_db > threshold:
-                out[i, j] = x[i, j]
-            else:
-                out[i, j] = np.min(window)
-
-    return out
+    # Reshape to original
+    return out_flat.reshape(win_shape[0], win_shape[1])
