@@ -3,12 +3,22 @@ import os
 import numpy as np
 import pandas as pd
 from scipy.io import wavfile
-from scipy.signal import get_window, stft
+from scipy.signal import get_window, stft, spectrogram
 import matplotlib.pyplot as plt
 from scipy.fftpack import fft
+from scipy.ndimage import uniform_filter1d
 import cppimport
 import argparse
 from tqdm import tqdm
+from roll_meandB_py import (
+    roll_meandB,
+    roll_meandB_vector,
+    roll_meandB_threshold,
+    roll_meandB_efficient,
+    roll_meandB_vector_efficient,
+    roll_meandB_threshold_efficient,
+)
+
 
 # Compile and import C++ modules
 
@@ -18,8 +28,8 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def load_cpp_modules():
     cpp_dir = dir_path  # Folder where .cpp files are located
-
     print("Importing C++ modules...")
+
     roll_meandB = cppimport.imp_from_filepath(os.path.join(cpp_dir, "roll_meandB.cpp"))
     print("roll_meandB imported successfully.")
 
@@ -37,7 +47,37 @@ def load_cpp_modules():
 
 
 # TODO: Move these to a variable to send to all functions
-roll_meandB, roll_meandB_vector, roll_meandB_threshold = load_cpp_modules()
+# roll_meandB, roll_meandB_vector, roll_meandB_threshold = load_cpp_modules()
+
+
+def calculate_spectrogram_scipy(sound_segment, wl=384, overlap=0, sampling_rate=44100):
+    """
+    Calculate the spectrogram using scipy.
+
+    Parameters:
+        sound_segment (1D numpy array): Input audio data.
+        wl (int): Window length for FFT.
+        overlap (float): Overlap percentage (0 to 100).
+        sampling_rate (int): Sampling rate of the audio.
+
+    Returns:
+        numpy.ndarray: Spectrogram amplitude (2D array).
+    """
+    step = wl - int(wl * (overlap / 100))
+    # Normalize the audio data
+    sound_segment = sound_segment / np.max(np.abs(sound_segment))
+    window = get_window("hamming", wl, fftbins=True)
+    f, t, Sxx = spectrogram(
+        sound_segment,
+        fs=sampling_rate,
+        window=window,
+        nperseg=wl,
+        noverlap=overlap,
+        mode="magnitude",
+        scaling="spectrum",  # Important: prevents power scaling
+        return_onesided=True,
+    )
+    return Sxx
 
 
 def calculate_spectrogram_amplitude(
@@ -93,7 +133,7 @@ def smooth_noise_profile(raw_spectro, window_size=3, threshold=-90):
     Returns:
         numpy.ndarray: Smoothed spectrogram with threshold applied.
     """
-    smoothed = roll_meandB.roll_meandB(raw_spectro, window_size=window_size)
+    smoothed = roll_meandB_efficient(raw_spectro, window_size=window_size)
     return np.maximum(smoothed, threshold)
 
 
@@ -113,6 +153,40 @@ def calculate_mode_per_row(matrix, window_size=5):
 
     for i, row in enumerate(matrix):
         modes[i] = roll_meandB_vector.roll_meandB_vector(row, window_size).max()
+    return modes
+
+
+def dB_mode_per_row(matrix, window_size=5):
+    """
+    Calculate the dB mode for each row in a 2D array.
+
+    Parameters:
+        matrix (numpy.ndarray): Input 2D array.
+        window_size (int): Rolling window size for smoothing.
+
+    Returns:
+        numpy.ndarray: 1D array of dB modes for each row.
+    """
+
+    matrix = np.array(matrix, dtype=np.float64)
+    modes = np.empty(matrix.shape[0], dtype=np.float64)
+
+    for i, row in enumerate(matrix):
+        seq_100 = np.linspace(np.min(row), np.max(row), num=100)
+        counts, bin_edges = np.histogram(row, bins=seq_100)
+
+        counts = roll_meandB_vector(counts, window_size=window_size)
+
+        # print("Counts after rolling mean:", counts)
+
+        mids = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+        # print(mids)
+
+        mode = mids[np.argmax(counts)]
+
+        modes[i] = mode
+
     return modes
 
 
@@ -146,7 +220,7 @@ def apply_threshold_neighborhood(
     Returns:
         numpy.ndarray: Processed matrix after applying thresholding.
     """
-    return roll_meandB_threshold.roll_meandB_threshold(
+    return roll_meandB_threshold_efficient(
         matrix, window_row_size, window_col_size, threshold
     )
 
@@ -180,20 +254,37 @@ def calculate_PMN(sound_segment):
     neighborhood_threshold = 3
 
     # Step 1: Calculate spectrogram amplitude
-    raw_spectro = calculate_spectrogram_amplitude(sound_segment, wl=wl, overlap=overlap)
-
+    # raw_spectro = calculate_spectrogram_amplitude(sound_segment, wl=wl, overlap=overlap)
+    raw_spectro = calculate_spectrogram_amplitude(
+        sound_segment, wl=wl, overlap=overlap, sampling_rate=44100
+    )
     # Step 2: Smooth noise profile
     raw_spectro_roll = smooth_noise_profile(
         raw_spectro, window_size=3, threshold=threshold
     )
 
-    # Step 3: Calculate mode
-    spectro_mode = calculate_mode_per_row(raw_spectro_roll, window_size=5)
+    # print("Raw spectrogram roll shape:", raw_spectro_roll.shape)
+    # print("Raw spectrogram roll:", raw_spectro_roll)
 
-    # Step 4: Subtract background noise
+    # Step 3: Calculate mode
+    spectro_mode = dB_mode_per_row(raw_spectro_roll, window_size=5)
+
+    # print("Spectrogram mode shape:", spectro_mode.shape)
+    # print("Spectrogram mode:", spectro_mode)
+
+    # Step 4:  Smooth the mode
+    spectro_mode = roll_meandB_vector(spectro_mode, window_size=5)
+
+    # print("Spectrogram mode smoothed shape:", spectro_mode.shape)
+    # print("Spectrogram mode smoothed:", spectro_mode)
+
+    # Step 5: Subtract background noise
     spectro_less_mode = subtract_background_noise(raw_spectro, spectro_mode)
 
-    # Step 5: Apply neighborhood thresholding
+    # print("Spectrogram less mode shape:", spectro_less_mode.shape)
+    # print("Spectrogram less mode:", spectro_less_mode)
+
+    # Step 6: Apply neighborhood thresholding
     ale_matrix = apply_threshold_neighborhood(
         spectro_less_mode,
         window_row_size=9,
@@ -201,14 +292,20 @@ def calculate_PMN(sound_segment):
         threshold=neighborhood_threshold,
     )
 
-    # Step 6: Calculate PMN
+    # print("ALE matrix shape:", ale_matrix.shape)
+    # print("ALE matrix:", ale_matrix)
+
+    # Step 7: Calculate PMN
     PMN = calculate_PMN_from_matrix(ale_matrix)
 
-    # Step 7: Duplicate PMN and spectro_mode to match 384 rows
+    # print("PMN shape:", PMN.shape)
+    # print("PMN:", PMN)
+
+    # Step 8: Duplicate PMN and spectro_mode to match 384 rows
     PMN_repeated = np.tile(PMN, 2)  # Repeat PMN twice
     spectro_mode_repeated = np.tile(spectro_mode, 2)  # Repeat noise values twice
 
-    # Step 8: Create DataFrame
+    # Step 9: Create DataFrame
     df = pd.DataFrame(
         {
             "Frequency": np.arange(1, wl + 1),  # Frequency from 1 to 384
@@ -223,11 +320,16 @@ def calculate_PMN_for_file(filepath, save=False, output_dir=None):
     sampling_rate, data = wavfile.read(
         filepath
     )  # Placeholder for extracting 'from' and 'to'
+
+    # print("Sampling rate:", sampling_rate)
+    # print("Data: ", data[:20])
+
     length = int(len(data) / sampling_rate / 60)
     list_df = []
     for k in range(length):
         # Read wav file for the current minute (assuming a utility to extract minutes)
         sound_segment = data[k * sampling_rate * 60 : (k + 1) * sampling_rate * 60]
+
         df = calculate_PMN(sound_segment)
         list_df.append(df)
     df_output = pd.concat(list_df)
