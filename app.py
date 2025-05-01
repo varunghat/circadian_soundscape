@@ -627,6 +627,10 @@ force_reprocess_files = st.checkbox(
     help="If checked, all files will be reprocessed, even if they have already been processed (PMN calculated).",
 )
 
+if force_reprocess_files:
+    st.warning(
+        "Force reprocess files option is checked. All existing PMN files will be deleted."
+    )
 
 # Add a way to upload csv files
 csv_upload = st.file_uploader(
@@ -705,6 +709,7 @@ if st.button("Visualize", key="visualize_button"):
         existing_pmn_files = list(pmn_output_dir.glob("*.csv"))
 
         if force_reprocess_files:
+
             # Delete the existing PMN files if the user wants to reprocess the files
             selected_files_unprocessed = selected_files
 
@@ -716,36 +721,36 @@ if st.button("Visualize", key="visualize_button"):
                 if file.stem not in [f.stem for f in existing_pmn_files]
             ]
 
-            # Check if the files have already been processed
-            if len(selected_files_unprocessed) == 0:
-                st.warning("All files have already been processed.")
-            else:
-                st.write(
-                    f"Processing {len(selected_files_unprocessed)} files out of {len(selected_files)}..."
+        # Check if the files have already been processed
+        if len(selected_files_unprocessed) == 0:
+            st.warning("All files have already been processed.")
+        else:
+            st.write(
+                f"Processing {len(selected_files_unprocessed)} files out of {len(selected_files)}..."
+            )
+
+            with st.spinner("Processing audio files..."):
+                # Create a temporary text document with the selected files
+                temp_file_path = scratch_dir / "selected_files.txt"
+                with open(temp_file_path, "w") as f:
+                    for file in selected_files_unprocessed:
+                        f.write(str(file) + "\n")
+
+                # Process one file at a time
+                res = subprocess.run(
+                    [
+                        "python",
+                        "prototype/prototype_calculate_PMN_for_dir.py",
+                        "--file_list",
+                        temp_file_path,
+                        "--dir_output",
+                        str(pmn_output_dir),
+                    ]
                 )
-
-                with st.spinner("Processing audio files..."):
-                    # Create a temporary text document with the selected files
-                    temp_file_path = scratch_dir / "selected_files.txt"
-                    with open(temp_file_path, "w") as f:
-                        for file in selected_files_unprocessed:
-                            f.write(str(file) + "\n")
-
-                    # Process one file at a time
-                    res = subprocess.run(
-                        [
-                            "python",
-                            "prototype/prototype_calculate_PMN_for_dir.py",
-                            "--file_list",
-                            temp_file_path,
-                            "--dir_output",
-                            str(pmn_output_dir),
-                        ]
-                    )
-                    if res.returncode != 0:
-                        st.error("Error processing the audio files.")
-                        st.stop()
-                    st.success("Audio files processed successfully.")
+                if res.returncode != 0:
+                    st.error("Error processing the audio files.")
+                    st.stop()
+                st.success("Audio files processed successfully.")
 
         with st.spinner("Aggregating the PMN results..."):
             # Aggregate the PMN results
