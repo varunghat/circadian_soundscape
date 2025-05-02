@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.ndimage import uniform_filter1d
 from numpy.lib.stride_tricks import sliding_window_view
+from numba import njit, prange
 
 
 def roll_meandB(x, window_size):
@@ -189,6 +190,29 @@ def roll_meandB_threshold(x, windowRowSize=9, windowColSize=3, threshold=3):
     return out
 
 
+def roll_meandB_threshold_safe(x, windowRowSize=9, windowColSize=3, threshold=3.0):
+    x = np.asarray(x, dtype=np.float64)
+
+    row_pad = (windowRowSize - 1) // 2
+    col_pad = (windowColSize - 1) // 2
+    x_padded = np.pad(
+        x, ((row_pad, row_pad), (col_pad, col_pad)), mode="constant", constant_values=0
+    )
+
+    rows, cols = x.shape
+    out = np.empty((rows, cols), dtype=np.float64)
+
+    for i in range(rows):
+        for j in range(cols):
+            window = x_padded[i : i + windowRowSize, j : j + windowColSize]
+            lin_vals = np.power(10, window / 10.0)
+            mean_db = 10 * np.log10(np.mean(lin_vals) + 1e-10)
+
+            out[i, j] = x[i, j] if mean_db > threshold else np.min(window)
+
+    return out
+
+
 def roll_meandB_threshold_efficient(x, windowRowSize=9, windowColSize=3, threshold=3.0):
     x = np.asarray(x, dtype=np.float64)
 
@@ -219,3 +243,34 @@ def roll_meandB_threshold_efficient(x, windowRowSize=9, windowColSize=3, thresho
 
     # Reshape to original
     return out_flat.reshape(win_shape[0], win_shape[1])
+
+
+@njit(parallel=True)
+def roll_meandB_threshold_numba(x, windowRowSize=9, windowColSize=3, threshold=3.0):
+    rows, cols = x.shape
+    out = np.empty((rows, cols), dtype=np.float64)
+
+    row_pad = (windowRowSize - 1) // 2
+    col_pad = (windowColSize - 1) // 2
+    padded = np.zeros((rows + 2 * row_pad, cols + 2 * col_pad), dtype=np.float64)
+    padded[row_pad : row_pad + rows, col_pad : col_pad + cols] = x
+
+    for i in prange(rows):
+        for j in range(cols):
+            sum_lin = 0.0
+            min_val = 1e10
+            count = 0
+
+            for r in range(windowRowSize):
+                for c in range(windowColSize):
+                    val = padded[i + r, j + c]
+                    lin_val = 10.0 ** (val / 10.0)
+                    sum_lin += lin_val
+                    count += 1
+                    if val < min_val:
+                        min_val = val
+
+            mean_db = 10.0 * np.log10(sum_lin / count + 1e-10)
+            out[i, j] = x[i, j] if mean_db > threshold else min_val
+
+    return out
