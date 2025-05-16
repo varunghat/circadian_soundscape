@@ -464,13 +464,17 @@ audio_format = st.selectbox(
     [
         "Audiomoth: YYYYMMDD_hhmmss.wav",
         "Songmeter: Prefix_YYYYMMDD_hhmmss.wav",
-        "TODO: THESE FORMATS NEED TO BE CHECKED",
+        "TODO: THESE FORMATS NEED TO BE IMPROVED",
     ],  # TODO: Check these formats
     index=0,
 )
 
 # Check if the user wants to offset the time
-offset_time = st.checkbox("Correct for timezone offset")
+offset_time = st.checkbox(
+    "Correct for timezone offset",
+    help="""If checked, the time will be corrected for the timezone offset. Please enter the offset in hours that you want to ADD to the time. 
+    For example, if you want to add 5 hours to the time, enter 5. If you want to subtract 3.5 hours from the time, enter -3.5""",
+)
 
 offset = st.number_input(
     "Timezone offset (hours)",
@@ -488,6 +492,13 @@ st.write("Offset:", offset)
 # TODO: Is timezone selection necessary? (Daylight savings, etc added problems)
 
 # Frequency bins
+st.subheader(
+    "Frequency bins",
+    help="""Frequency bins are used to group the frequency data into different ranges.
+            For example, if you want to group the frequency data into 5 bins, you can add/remove the number of bins and then enter the minimum and maximum frequency for each bin.
+            The color for each bin can also be selected, which will be used to plot the data.       
+            """,
+)
 
 
 cols = st.columns([10, 10, 1, 1.5, 2.1, 2], vertical_alignment="bottom")
@@ -538,6 +549,7 @@ agg_function = st.selectbox(
         # "Percentile",
         # "Custom?"
     ],
+    help="""The aggregation function is used to aggregate the PMN data for each frequency bin.""",
 )
 
 for i in range(st.session_state.NUM_FREQ_BINS):
@@ -599,7 +611,8 @@ st.subheader("Additional options")
 
 # Check if the user wants sunrise, sunset and solar noon times to be plotted
 sunrise_sunset = st.checkbox(
-    "Plot sunrise, sunset and solar noon times (if available) :sunrise:"
+    "Plot sunrise, sunset and solar noon times (if available) :sunrise:",
+    help="""If checked, the sunrise, sunset and solar noon times will be plotted on the plots.""",
 )
 
 sunrise_sunset_data = None
@@ -629,15 +642,15 @@ force_reprocess_files = st.checkbox(
 
 if force_reprocess_files:
     st.warning(
-        "Force reprocess files option is checked. All existing PMN files will be deleted."
+        "Force reprocess files option is checked. All existing previously calculated PMN files will be deleted."
     )
 
 
 # Add a way to upload csv files
-csv_upload = st.file_uploader(
-    "Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)",
-    type=["csv"],
-)
+# csv_upload = st.file_uploader(
+#    "Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)",
+#    type=["csv"],
+# )
 
 use_parallel = st.toggle(
     "Use parallel processing (if available) :computer:",
@@ -659,7 +672,11 @@ if use_parallel:
     )
     st.write(f"Number of workers: {num_workers}")
 
-use_plotly = st.toggle("Use Plotly (Interactive)?", value=True)
+use_plotly = st.toggle(
+    "Use Plotly (Interactive)?",
+    value=True,
+    help="If checked, the plots will be interactive and can be zoomed in and out. If unchecked, the plots will be static with matplotlib.",
+)
 # Button
 if st.button("Visualize", key="visualize_button"):
     st.write("Visualizing...")
@@ -798,15 +815,12 @@ if st.button("Visualize", key="visualize_button"):
                 offset=offset,
             )
         display_csv_file = None
-        if csv_upload is not None:
-            display_csv_file = csv_upload
-        else:
-            if agg_function == "Mean":
-                display_csv_file = avg_csv
-            elif agg_function == "Max":
-                display_csv_file = max_csv
-            elif agg_function == "Median":
-                display_csv_file = median_csv
+        if agg_function == "Mean":
+            display_csv_file = avg_csv
+        elif agg_function == "Max":
+            display_csv_file = max_csv
+        elif agg_function == "Median":
+            display_csv_file = median_csv
 
     else:
         st.error("No files selected.")
