@@ -632,11 +632,32 @@ if force_reprocess_files:
         "Force reprocess files option is checked. All existing PMN files will be deleted."
     )
 
+
 # Add a way to upload csv files
 csv_upload = st.file_uploader(
     "Upload the aggregated PMN CSV file for a day (AFTER RUNNING AGGREGATE PMN separately, should be fixed later)",
     type=["csv"],
 )
+
+use_parallel = st.toggle(
+    "Use parallel processing (if available) :computer:",
+    value=True,
+    help="If checked, the PMN calculation will be done in parallel using multiple cores.",
+)
+
+if use_parallel:
+    st.warning(
+        "Parallel processing option is checked. The PMN calculation will be done in parallel using multiple cores."
+    )
+    # number of workers
+    num_workers = st.number_input(
+        "Number of workers (cores) to use for parallel processing",
+        min_value=1,
+        max_value=8,
+        value=4,
+        step=1,
+    )
+    st.write(f"Number of workers: {num_workers}")
 
 use_plotly = st.toggle("Use Plotly (Interactive)?", value=True)
 # Button
@@ -712,6 +733,8 @@ if st.button("Visualize", key="visualize_button"):
 
             # Delete the existing PMN files if the user wants to reprocess the files
             selected_files_unprocessed = selected_files
+            for file in existing_pmn_files:
+                file.unlink()
 
         else:
 
@@ -737,16 +760,21 @@ if st.button("Visualize", key="visualize_button"):
                         f.write(str(file) + "\n")
 
                 # Process one file at a time
-                res = subprocess.run(
-                    [
-                        "python",
-                        "prototype/prototype_calculate_PMN_for_dir.py",
-                        "--file_list",
-                        temp_file_path,
-                        "--dir_output",
-                        str(pmn_output_dir),
+                command = [
+                    "python",
+                    "prototype/prototype_calculate_PMN_for_dir.py",
+                    "--file_list",
+                    str(temp_file_path),
+                    "--dir_output",
+                    str(pmn_output_dir),
+                ]
+                if use_parallel:
+                    command += [
+                        "--parallel",
+                        "--num_workers",
+                        str(num_workers),
                     ]
-                )
+                res = subprocess.run(command)
                 if res.returncode != 0:
                     st.error("Error processing the audio files.")
                     st.stop()
